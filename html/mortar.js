@@ -8,6 +8,10 @@
  *
  */
 
+var showHelpMessages = true;
+var showHelpMessagesElement = new Element('div#helpmessages', { 'class': 'headerswitch' });
+var helperSliders = {};
+
 var suggestionTableCounter = 0;
 var suggestionTables = {};
 var suggestionColumns = {};
@@ -81,7 +85,16 @@ function makeTable(container, matrix, headers) {
 	var htmlTable = new HtmlTable(options);
 
 	htmlTable.addEvent('rowFocus', function() {
+		$('query').value = '';
 		runConjunctiveQuery();
+
+		if (showHelpMessages)
+			helperSliders['help1'].slideOut().chain(function() {
+				helperSliders['help1'].hide();
+				if (showHelpMessages)
+					helperSliders['help2'].slideIn();
+			});
+
 	});
 	htmlTable.addEvent('rowUnfocus', function() {
 		runConjunctiveQuery();
@@ -103,6 +116,13 @@ function processQuery() {
 
 	if (!query || query.length == 0)
 		return;
+
+	if (showHelpMessages)
+		helperSliders['help0'].slideOut().chain(function() {
+			helperSliders['help0'].hide();
+			if (showHelpMessages)
+				helperSliders['help1'].slideIn();
+		});
 
 	var yoctogiClauses = {
 		pmcid: query,
@@ -189,7 +209,26 @@ function runConjunctiveQuery() {
 	}).post(JSON.encode(yoctogiRequest));
 }
 
+function updateHelpMessagesSwitch() {
+	if (showHelpMessages)
+		$('helpmessages').innerHTML = 'Help Messages: On&nbsp;';
+	else
+		$('helpmessages').innerHTML = 'Help Messages: Off';
+}
+
 $(window).onload = function() {
+	showHelpMessagesElement.inject($('header'));
+	showHelpMessagesElement.addEvent('click', function() {
+		showHelpMessages = showHelpMessages ? false : true;
+		updateHelpMessagesSwitch();
+	});
+	updateHelpMessagesSwitch();
+
+	helperSliders['help0'] = new Fx.Slide('help0', { mode: 'horizontal' }).hide().toggle();
+	helperSliders['help1'] = new Fx.Slide('help1', { mode: 'horizontal' }).hide();
+	helperSliders['help2'] = new Fx.Slide('help2', { mode: 'horizontal' }).hide();
+
 	$('query').addEvent('keyup', processQuery);
+	new OverText($('query'));
 }
 

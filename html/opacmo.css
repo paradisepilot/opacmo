@@ -8,12 +8,92 @@ body {
 input {
 	font-family: helvetica;
 	font-size: 16pt;
+	width: 100%;
+}
+
+.overTxtLabel {
+	color: #aaaaaa;
+	font-style: italic;
 }
 
 .closebutton {
 	display: block;
 	margin-left: auto;
 	margin-right: auto;
+}
+
+#logo {
+	display: inline;
+	float: right;
+}
+
+#header {
+	background-color: #444444;
+	font-family: courier;
+	height: 20pt;
+	width: 100%;
+}
+
+.helpbar {
+	color: #00adee;
+	font-size: 12pt;
+	padding-top: 3pt;
+	padding-left: 12pt;
+}
+
+.headerswitch {
+	color: #00adee;
+	font-size: 10pt;
+	float: right;
+	margin-top: 4pt;
+	margin-left: 10pt;
+	margin-right: 10pt;
+}
+
+.row {
+	display: table;
+	overflow: auto;
+}
+
+.stage {
+	display: table-cell;
+	float: left;
+	font-family: courier;
+	letter-spacing: -20pt;
+	margin-right: 20pt;
+	font-size: 80pt;
+	vertical-align: top;
+}
+
+.helpstage {
+	font-family: courier;
+	font-size: 14pt;
+}
+
+.example {
+	font-size: 12pt;
+}
+
+.stageaction {
+	display: table-cell;
+	width: 100%;
+	overflow: hidden;
+	vertical-align: middle;
+}
+
+.stagesuggestions {
+	display: table-cell;
+	width: 100%;
+	overflow: hidden;
+	vertical-align: top;
+	height: 210pt;
+}
+
+.stageresults {
+	display: table-cell;
+	width: 100%;
+	overflow: hidden;
+	vertical-align: top;
 }
 
 #suggestioncontainer {
@@ -34,11 +114,11 @@ input {
 }
 
 tr.table-tr-hovered {
-	color: #6666ff;
+	color: #11beff;
 }
 
 tr.table-tr-selected {
-	color: #0000ff;
+	color: #00adee;
 }
 
 td.suggestiontable {
