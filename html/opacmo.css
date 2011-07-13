@@ -32,13 +32,15 @@ input {
 	font-family: courier;
 	height: 20pt;
 	width: 100%;
+	margin-bottom: 5pt;
 }
 
 .helpbar {
+	display: inline;
 	color: #00adee;
 	font-size: 12pt;
-	padding-top: 3pt;
-	padding-left: 12pt;
+	margin-bottom: 8pt;
+	margin-left: 12pt;
 }
 
 .headerswitch {
@@ -63,11 +65,6 @@ input {
 	margin-right: 20pt;
 	font-size: 80pt;
 	vertical-align: top;
-}
-
-.helpstage {
-	font-family: courier;
-	font-size: 14pt;
 }
 
 .example {
