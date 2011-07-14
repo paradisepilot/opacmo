@@ -102,10 +102,30 @@ if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] ; then
 fi
 
 if [ "$1" = 'all' ] || [ "$1" = 'yoctogi' ] ; then
+	echo "Adding human readable titles, names and terms..."
 	for joined in $data_dir/*__joined.tsv ; do
-		sort -k 6 -t "	" $joined > $joined.tmp
-		join -t "	" -1 6 -2 1 $joined.tmp term_names.tsv
+		if [ ! -f $joined ] ; then continue ; fi
 
+		echo " - processing `basename $joined __joined.tsv`"
+
+		echo "   - generating Yoctogi main table"
+
+		echo "     - adding ontology term-names"
+		sort -k 6 -t "	" $joined > $joined.tmp
+		join -t "	" -a 1 -1 6 -2 1 -o 1.1,1.2,1.3,1.4,1.5,2.2,0,1.7 $joined.tmp term_names.tsv > $joined.tmp2
+
+		echo "     - adding species names"
+		sort -k 4 -t "	" $joined.tmp2 > $joined.tmp
+		join -t "	" -a 1 -1 4 -2 1 -o 1.1,1.2,1.3,2.2,0,1.5,1.6,1.7,1.8 $joined.tmp species_names.tsv \
+			> $data_dir/`basename $joined __joined.tsv`__yoctogi.tsv
+
+                echo "   - generating Yoctogi satellite table"
+
+		echo "     - adding publication titles"
+		join -t "	" -1 1 -2 1 -o 0,2.2 $joined titles.tsv | uniq \
+			> $data_dir/`basename $joined __joined.tsv`__yoctogi_titles.tsv
+
+		rm -f $joined.tmp $joined.tmp2
 	done
 fi
 
