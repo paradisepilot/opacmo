@@ -39,7 +39,7 @@ if [[ $# -lt 1 ]] || [[ $# -gt 2 ]] ; then
 	exit
 fi
 
-if [ "$1" != 'all' ] && [ "$1" != 'get' ] && [ "$1" != 'ner' ] && [ "$1" != 'tsv' ] ; then
+if [ "$1" != 'all' ] && [ "$1" != 'get' ] && [ "$1" != 'ner' ] && [ "$1" != 'tsv' ] && [ "$1" != 'yoctogi' ] ; then
 	echo "TODO: help message"
 	exit
 fi
@@ -98,6 +98,14 @@ if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] ; then
 		join -t "	" -a 1 -a 2 -1 1 -2 1 -o 0,1.2,1.3,1.4,1.5,2.2,2.3 $tmp/genes_species.tmp $terms.tmp > $out
 
 		rm -f $genes.tmp $species.tmp $terms.tmp $tmp/*.tmp
+	done
+fi
+
+if [ "$1" = 'all' ] || [ "$1" = 'yoctogi' ] ; then
+	for joined in $data_dir/*__joined.tsv ; do
+		sort -k 6 -t "	" $joined > $joined.tmp
+		join -t "	" -1 6 -2 1 $joined.tmp term_names.tsv
+
 	done
 fi
 
