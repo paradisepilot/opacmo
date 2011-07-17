@@ -66,3 +66,4 @@ P.J. Onori. These icons are licenced under the
 [Attribution-ShareAlike 3.0 United States](http://creativecommons.org/licenses/by-sa/3.0/us/)
 Creative Commons License.
 
+The spinner image `html/images/ajax-loader.gif` was created by [ajaxload.info](http://www.ajaxload.info/).
