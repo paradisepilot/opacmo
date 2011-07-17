@@ -24,6 +24,8 @@ get_cut_value() {
 	return `cut -f 3 "$1" | sort -n -r | head -n $index | tail -n 1`
 }
 
+# Note: Also rewrites identifiers like BMC_Genomics-6--554113 to
+#       their PubMed Central ID. Here, the PMC-ID would be 554113.
 cut_below() {
 	sed -E 's/^.+-([0-9]+)	/\1	/' $2 \
 		| ruby -e "STDIN.each { |l|
@@ -81,7 +83,14 @@ if [ "$1" = 'all' ] || [ "$1" = 'ner' ] ; then
 fi
 
 if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] ; then
-	echo "Joining genes, species and ontology terms..."
+	echo "Filtering and joining genes, species and ontology terms..."
+
+	echo " - generating a species white list for filtering species name abbreviations"
+	# Create a list of too generously chosen species names:
+	awk -F "\t" '{print $3"\t"$1}' dictionaries/names.dmp | sort -k 1 > $data_dir/all_species.tmp
+	join -t "	" -1 1 -2 1 -o 0,2.2 tmp/species $data_dir/all_species.tmp | uniq \
+		| sort -t "	" -k 2 > $data_dir/whitelist._tmp
+
 	for genes in $data_dir/*__genes.tsv ; do
 		echo " - processing `basename "$genes" __genes.tsv`..."
 		species=$data_dir/`basename "$genes" __genes.tsv`__species.tsv
@@ -94,15 +103,22 @@ if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] ; then
 		cut_below 3 $species
 		cut_below 3 $terms
 
+		sort -t "	" -k 2 $species.tmp > $species.tmp2
+		join -t "	" -1 2 -2 2 -o 1.1,0,1.3 $species.tmp2 $data_dir/whitelist._tmp \
+			| sort -t "	" -k 1 > $species.tmp
+
 		join -t "	" -a 1 -a 2 -1 1 -2 1 -o 0,1.2,1.3,2.2,2.3 $genes.tmp $species.tmp > $tmp/genes_species.tmp
 		join -t "	" -a 1 -a 2 -1 1 -2 1 -o 0,1.2,1.3,1.4,1.5,2.2,2.3 $tmp/genes_species.tmp $terms.tmp > $out
 
-		rm -f $genes.tmp $species.tmp $terms.tmp $tmp/*.tmp
+		rm -f $genes.tmp $species.tmp $species.tmp2 $terms.tmp $tmp/*.tmp
 	done
+
+	rm -f $data_dir/all_species.tmp $data_dir/whitelist._tmp
 fi
 
 if [ "$1" = 'all' ] || [ "$1" = 'yoctogi' ] ; then
 	echo "Adding human readable titles, names and terms..."
+
 	for joined in $data_dir/*__joined.tsv ; do
 		if [ ! -f $joined ] ; then continue ; fi
 
@@ -110,18 +126,22 @@ if [ "$1" = 'all' ] || [ "$1" = 'yoctogi' ] ; then
 
 		echo "   - generating Yoctogi main table"
 
+		echo "     - adding gene names"
+		sort -k 2 -t "	" $joined > $joined.tmp
+		join -t "	" -a 1 -1 2 -2 1 -o 1.1,2.2,0,1.3,1.4,1.5,1.6,1.7 $joined.tmp gene_names.tsv > $joined.tmp2
+
 		echo "     - adding ontology term-names"
-		sort -k 6 -t "	" $joined > $joined.tmp
-		join -t "	" -a 1 -1 6 -2 1 -o 1.1,1.2,1.3,1.4,1.5,2.2,0,1.7 $joined.tmp term_names.tsv > $joined.tmp2
+		sort -k 7 -t "	" $joined.tmp2 > $joined.tmp
+		join -t "	" -a 1 -1 7 -2 1 -o 1.1,1.2,1.3,1.4,1.5,1.6,2.2,0,1.8 $joined.tmp term_names.tsv > $joined.tmp2
 
 		echo "     - adding species names"
-		sort -k 4 -t "	" $joined.tmp2 > $joined.tmp
-		join -t "	" -a 1 -1 4 -2 1 -o 1.1,1.2,1.3,2.2,0,1.5,1.6,1.7,1.8 $joined.tmp species_names.tsv \
+		sort -k 5 -t "	" $joined.tmp2 > $joined.tmp
+		join -t "	" -a 1 -1 5 -2 1 -o 1.1,1.2,1.3,1.4,2.2,0,1.6,1.7,1.8,1.9 $joined.tmp species_names.tsv \
 			> $data_dir/`basename $joined __joined.tsv`__yoctogi.tsv
 
-                echo "   - generating Yoctogi satellite table"
+                echo "   - generating Yoctogi dimension table"
 
-		echo "     - adding publication titles"
+		echo "     - publication titles"
 		join -t "	" -1 1 -2 1 -o 0,2.2 $joined titles.tsv | uniq \
 			> $data_dir/`basename $joined __joined.tsv`__yoctogi_titles.tsv
 
