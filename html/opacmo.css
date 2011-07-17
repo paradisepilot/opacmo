@@ -1,7 +1,7 @@
 body {
 	font-family: helvetica;
 	font-size: 16pt;
-	color: #666666;
+	color: #555555;
 	background-color: #ffffff;
 }
 
@@ -9,6 +9,15 @@ input {
 	font-family: helvetica;
 	font-size: 16pt;
 	width: 100%;
+}
+
+#caseswitch {
+	display: block;
+	font-family: courier;
+	font-size: 10pt;
+	float: right;
+	cursor: pointer;
+	margin-bottom: 3pt;
 }
 
 .overTxtLabel {
@@ -23,33 +32,80 @@ input {
 }
 
 #logo {
-	display: inline;
 	float: right;
+	padding-left: 10px;
+	padding-right: 20px;
+	margin-top: -20px;
+}
+
+.signatures {
+	font-style: italic;
+	text-align: right;
 }
 
 #header {
-	background-color: #444444;
+	background-color: #d0d0d0;
 	font-family: courier;
+	border-radius: 10pt;
+	-moz-border-radius: 10pt;
 	height: 20pt;
 	width: 100%;
-	margin-bottom: 5pt;
+	margin-top: 20px;
+	margin-bottom: 20pt;
+}
+
+#aboutswitch {
+	color: #333333;
+	font-size: 10pt;
+	float: left;
+	margin-top: 4pt;
+	margin-left: 10pt;
+	margin-right: 10pt;
+	cursor: pointer;
+}
+
+#about {
+	color: #555555;
+	font-family: helvetica;
+	font-size: 11pt;
+	background-color: #d0d0d0;
+	margin-top: -21pt;
+	margin-bottom: 20pt;
+	margin-left: 70px;
+	padding-left: 20pt;
+	padding-right: 20pt;
+	padding-top: 20pt;
+	padding-bottom: 10pt;
+	border-bottom-left-radius: 20px;
+	border-bottom-right-radius: 20px;
+	-moz-border-bottom-left-radius: 20px;
+	-moz-border-bottom-right-radius: 20px;
+	visibility: hidden;
 }
 
 .helpbar {
-	display: inline;
+	display: table;
 	color: #00adee;
-	font-size: 12pt;
+	font-size: 11pt;
+	font-style: italic;
 	margin-bottom: 8pt;
 	margin-left: 12pt;
 }
 
+.helpitem {
+	display: table-cell;
+	padding-right: 7pt;
+	vertical-align: middle;
+}
+
 .headerswitch {
-	color: #00adee;
+	color: #333333;
 	font-size: 10pt;
 	float: right;
 	margin-top: 4pt;
 	margin-left: 10pt;
 	margin-right: 10pt;
+	cursor: pointer;
 }
 
 .row {
@@ -57,8 +113,15 @@ input {
 	overflow: auto;
 }
 
+.toprow {
+	display: table;
+	overflow: auto;
+	margin-top: -10pt;
+}
+
 .stage {
 	display: table-cell;
+	color: #5E5150;
 	float: left;
 	font-family: courier;
 	letter-spacing: -20pt;
@@ -91,12 +154,14 @@ input {
 	width: 100%;
 	overflow: hidden;
 	vertical-align: top;
+	height: 210pt;
 }
 
 #suggestioncontainer {
 	display: block;
 	float: left;
 	width: 100%;
+	min-height: 180pt;
 }
 
 #resultcontainer {
@@ -110,8 +175,13 @@ input {
 	width: '33%';
 }
 
+table {
+	cursor: default;
+}
+
 tr.table-tr-hovered {
-	color: #11beff;
+	color: #00709b;
+	cursor: pointer;
 }
 
 tr.table-tr-selected {

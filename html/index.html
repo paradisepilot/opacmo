@@ -1,19 +1,34 @@
 <html>
 	<head>
 		<link rel="stylesheet" href="opacmo.css" type="text/css" />
+		<link rel="stylesheet" href="spinner.css" type="text/css" />
 		<script type="text/javascript" src="mootools-core-1.3.2-full-compat.js"></script>
 		<script type="text/javascript" src="mootools-more-1.3.2.1.js"></script>
 		<script type="text/javascript" src="mortar.js"></script>
 		<title>The OpenAccess Mortar</title>
 	<head>
 	<body>
-		<!-- <div id="logo"><img src="images/opacmo160.png" alt="opacmo logo" /></div> -->
-		<div id="header"></div>
-		<div id="help0" class="helpbar">Enter some biomedical term that you are interested in.</div>
-		<div class="row">
+		<div id="header">
+			<div id="logo"><img src="images/opacmo60.png" alt="opacmo logo" /></div>
+		</div>
+		<div id="about">
+			opacmo is the Open Access Mortar &mdash; a mash-up of biomedical objects
+			linked to the open-access subset of PubMed Central.<br />
+			<p>
+			opacmo is currently in its development phase.
+			</p>
+			<p>
+				<div class="signatures">
+					Joachim Baran<br />
+					joachim.baran /at/ gmail /dot/ com
+				</div>
+			</p>
+		</div>
+		<div id="help0" class="helpbar"><div class="helpitem"><img src="images/cyan/lightbulb_15x24.png"></img></div><div class="helpitem">Enter some biomedical term that you are interested in below. You can click on the examples too.<br />Hits for terms that are in the database will appear immediately. Click on the term you were looking for.</div></div>
+		<div class="toprow">
 			<div class="stage">1.</div>
 			<div class="stageaction">
-				<form action="">
+				<form action="" autocomplete="off" onsubmit="return false;">
 					<div id="querycontainer">
 						<input type="text" id="query" name="query" maxlength="60" alt="gene, protein, disease, molecular function, species, ..." />
 					</div>
@@ -21,14 +36,14 @@
 				<div class="example">Examples: BRCA2, Chikungunya fever, lactase activity, Mus musculus, ...</div>
 			</div>
 		</div>
-		<div id="help1" class="helpbar">Click on the items you are interested in. Enter another term in the text field.</div>
+		<div id="help1" class="helpbar"><div class="helpitem"><img src="images/cyan/lightbulb_15x24.png"></img></div><div class="helpitem">Below you see objects that match the text you entered. Click on the items you are interested in.<br />You can add more entries: just <b>enter another term in the text field</b> when you are done selecting objects.</div></div>
 		<div class="row">
 			<div class="stage">2.</div>
 			<div class="stagesuggestions">
 				<div id="suggestioncontainer"></div>
 			</div>
 		</div>
-		<div id="help2" class="helpbar">Repeat. When you are happy with the result, click on "xls" or "tsv" to save as a file.</div>
+		<div id="help2" class="helpbar"><div class="helpitem"><img src="images/cyan/lightbulb_15x24.png"></img></div><div class="helpitem">Repeat. Enter more biomedical terms and select more object to narrow down your search results.<br />When you are happy with the result, click on "xls" or "tsv" to save as a file.</div></div>
 		<div class="row">
 			<div class="stage">3.</div>
 			<div class="stageresults">
