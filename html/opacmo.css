@@ -18,6 +18,14 @@ input {
 	float: right;
 	cursor: pointer;
 	margin-bottom: 3pt;
+	padding: 2pt;
+}
+
+#caseswitch:hover {
+	background-color: #00adee;
+	color: #ffffff;
+	border-radius: 3pt;
+	-moz-border-radius: 3pt;
 }
 
 .overTxtLabel {
@@ -29,6 +37,17 @@ input {
 	display: block;
 	margin-left: auto;
 	margin-right: auto;
+	padding-left: 30px;
+	padding-right: 30px;
+	padding-top: 2pt;
+	padding-bottom: 2pt;
+	background-color: #666666;
+	border-radius: 3pt;
+	-moz-border-radius: 3pt;
+}
+
+.closebutton:hover {
+	background-color: #d0d0d0;
 }
 
 #logo {
@@ -46,9 +65,9 @@ input {
 #header {
 	background-color: #d0d0d0;
 	font-family: courier;
-	border-radius: 10pt;
-	-moz-border-radius: 10pt;
-	height: 20pt;
+	border-radius: 11pt;
+	-moz-border-radius: 11pt;
+	height: 22pt;
 	width: 100%;
 	margin-top: 20px;
 	margin-bottom: 20pt;
@@ -61,7 +80,14 @@ input {
 	margin-top: 4pt;
 	margin-left: 10pt;
 	margin-right: 10pt;
+	padding: 2pt;
 	cursor: pointer;
+}
+
+#aboutswitch:hover {
+	background-color: #a0a0a0;
+	border-radius: 3pt;
+	-moz-border-radius: 3pt;
 }
 
 #about {
@@ -105,7 +131,14 @@ input {
 	margin-top: 4pt;
 	margin-left: 10pt;
 	margin-right: 10pt;
+	padding: 2pt;
 	cursor: pointer;
+}
+
+.headerswitch:hover {
+	background-color: #a0a0a0;
+	border-radius: 3pt;
+	-moz-border-radius: 3pt;
 }
 
 .row {

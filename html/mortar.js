@@ -116,7 +116,7 @@ function clearSuggestions() {
 			});
 			suggestionTables[suggestions[i].id].disableSelect();
 			suggestions[i].getChildren()[1].morph({
-				'color': '#bbbbbb'
+				'color': '#999999'
 			});
 		}
 	}
@@ -145,7 +145,7 @@ function makeTable(container, matrix, headers) {
 
 	var closeButton = new Element('img#c' + id, {
 		'class': 'closebutton',
-		title: 'bla',
+		title: 'Remove from query.',
 		src: '/images/gray_light/x_alt_12x12.png'
 	});
 	closeButton.addEvent('click', function() {

@@ -24,26 +24,26 @@
 				</div>
 			</p>
 		</div>
-		<div id="help0" class="helpbar"><div class="helpitem"><img src="images/cyan/lightbulb_15x24.png"></img></div><div class="helpitem">Enter some biomedical term that you are interested in below. You can click on the examples too.<br />Hits for terms that are in the database will appear immediately. Click on the term you were looking for.</div></div>
+			<div id="help0" class="helpbar"><div class="helpitem"><img src="images/cyan/lightbulb_15x24.png"></img></div><div class="helpitem">Find publications linked to genes, proteins, species, diseases and other ontological terms &mdash; and vice versa.<br />Start off with entering some biomedical term that you are interested in below. Try entering 'br'.</div></div>
 		<div class="toprow">
 			<div class="stage">1.</div>
 			<div class="stageaction">
 				<form action="" autocomplete="off" onsubmit="return false;">
 					<div id="querycontainer">
-						<input type="text" id="query" name="query" maxlength="60" alt="gene, protein, disease, molecular function, species, ..." />
+						<input type="text" id="query" name="query" maxlength="60" alt="gene, protein, species, disease, molecular function, cellular component, ..." />
 					</div>
 				</form>
 				<div class="example">Examples: BRCA2, Chikungunya fever, lactase activity, Mus musculus, ...</div>
 			</div>
 		</div>
-		<div id="help1" class="helpbar"><div class="helpitem"><img src="images/cyan/lightbulb_15x24.png"></img></div><div class="helpitem">Below you see objects that match the text you entered. Click on the items you are interested in.<br />You can add more entries: just <b>enter another term in the text field</b> when you are done selecting objects.</div></div>
+		<div id="help1" class="helpbar"><div class="helpitem"><img src="images/cyan/lightbulb_15x24.png"></img></div><div class="helpitem">Below you see terms that start with the text you entered. Click on one or more terms that you are interested in.<br />If you entered 'br', you see that it matches the 'BRCA' genes as well as species 'Brachypodium' and OBO term 'breast cancer'.</div></div>
 		<div class="row">
 			<div class="stage">2.</div>
 			<div class="stagesuggestions">
 				<div id="suggestioncontainer"></div>
 			</div>
 		</div>
-		<div id="help2" class="helpbar"><div class="helpitem"><img src="images/cyan/lightbulb_15x24.png"></img></div><div class="helpitem">Repeat. Enter more biomedical terms and select more object to narrow down your search results.<br />When you are happy with the result, click on "xls" or "tsv" to save as a file.</div></div>
+		<div id="help2" class="helpbar"><div class="helpitem"><img src="images/cyan/lightbulb_15x24.png"></img></div><div class="helpitem">Below you see a list of publications and their linked genes, proteins, species, diseases, etc. that fit the selected terms above.<br />Enter another term in the text field to narrow down your search further. The terms you select will be added to this query conjunctively.</div></div>
 		<div class="row">
 			<div class="stage">3.</div>
 			<div class="stageresults">
