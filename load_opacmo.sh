@@ -1,17 +1,21 @@
 #!/bin/bash
 
-tables_in_yoctogi=`psql -c '\dp' yoctogi | tail -n 2 | tr -d '\n' | grep -o -E '[0-9]+'`
+db='psql'
 
-if [[ $tables_in_yoctogi -gt 0 ]] ; then
-	echo "There are already tables in the 'yoctogi' database."
-	echo ""
-	echo "Make sure you know what you are doing and remove this"
-	echo "test from the script. Don't come crying afterwards though."
-	exit
+if [[ "$db" = 'psql' ]] ; then
+	tables_in_yoctogi=`psql -c '\dp' yoctogi | tail -n 2 | tr -d '\n' | grep -o -E '[0-9]+'`
+
+	if [[ $tables_in_yoctogi -gt 0 ]] ; then
+		echo "There are already tables in the 'yoctogi' database."
+		echo ""
+		echo "Make sure you know what you are doing and remove this"
+		echo "test from the script. Don't come crying afterwards though."
+		exit
+	fi
+
+	psql -c "CREATE TABLE yoctogi (pmcid VARCHAR(24), entrezname VARCHAR(512), entrezid VARCHAR(24), entrezscore INTEGER, speciesname VARCHAR(512), speciesid VARCHAR(24), speciesscore INTEGER, oboname VARCHAR(512), oboid VARCHAR(24), oboscore INTEGER)" yoctogi
+	psql -c "CREATE TABLE yoctogi_titles (pmcid VARCHAR(24), pmctitle TEXT)" yoctogi
 fi
-
-psql -c "CREATE TABLE yoctogi (pmcid VARCHAR(24), entrezname VARCHAR(512), entrezid VARCHAR(24), entrezscore INTEGER, speciesname VARCHAR(512), speciesid VARCHAR(24), speciesscore INTEGER, oboname VARCHAR(512), oboid VARCHAR(24), oboscore INTEGER)" yoctogi
-psql -c "CREATE TABLE yoctogi_titles (pmcid VARCHAR(24), pmctitle TEXT)" yoctogi
 
 for tsv in opacmo_data/*__yoctogi*.tsv ; do
 	if [ ! -f "$tsv" ] ; then continue ; fi
@@ -38,29 +42,57 @@ for tsv in opacmo_data/*__yoctogi*.tsv ; do
 
 	echo " - processing `basename "$tsv"`"
 
-	psql -c "COPY $table FROM '`pwd`/$table_file'" yoctogi
+	if [[ "$db" = 'psql' ]] ; then
+		psql -c "COPY $table FROM '`pwd`/$table_file'" yoctogi
+	fi
+
+	if [[ "$db" = 'mongo' ]] ; then
+		if [[ "$table" = 'yoctogi' ]] ; then
+			mongoimport --type tsv -d yoctogi -c "$table" -f pmcid,entrezname,entrezid,entrezscore,speciesname,speciesid,speciesscore,oboname,oboid,oboscore,entrezname_lowercase,oboname_lowercase `pwd`/$table_file
+		else
+			mongoimport --type tsv -d yoctogi -c "$table" -f pmcid,pmctitle `pwd`/$table_file
+		fi
+	fi
 done
 
 rm -f opacmo_data/*tsv.tmp
 
-psql -c "CREATE INDEX pmcid_idx ON yoctogi (pmcid)" yoctogi
-psql -c "CREATE INDEX pmcid_lower_idx ON yoctogi ((lower(pmcid)))" yoctogi
-psql -c "CREATE INDEX entrezname_idx ON yoctogi (entrezname)" yoctogi
-psql -c "CREATE INDEX entrezname_lower_idx ON yoctogi ((lower(entrezname)))" yoctogi
-psql -c "CREATE INDEX entrezid_idx ON yoctogi (entrezid)" yoctogi
-psql -c "CREATE INDEX speciesname_idx ON yoctogi (speciesname)" yoctogi
-psql -c "CREATE INDEX speciesname_lower_idx ON yoctogi ((lower(speciesname)))" yoctogi
-psql -c "CREATE INDEX speciesid_idx ON yoctogi (speciesid)" yoctogi
-psql -c "CREATE INDEX oboname_idx ON yoctogi (oboname)" yoctogi
-psql -c "CREATE INDEX oboname_lower_idx ON yoctogi ((lower(oboname)))" yoctogi
-psql -c "CREATE INDEX oboid_idx ON yoctogi (oboid)" yoctogi
-psql -c "CREATE INDEX oboid_lower_idx ON yoctogi ((lower(oboid)))" yoctogi
+if [[ "$db" = 'psql' ]] ; then
+	psql -c "CREATE INDEX pmcid_idx ON yoctogi (pmcid)" yoctogi
+	psql -c "CREATE INDEX pmcid_lower_idx ON yoctogi ((lower(pmcid)))" yoctogi
+	psql -c "CREATE INDEX entrezname_idx ON yoctogi (entrezname)" yoctogi
+	psql -c "CREATE INDEX entrezname_lower_idx ON yoctogi ((lower(entrezname)))" yoctogi
+	psql -c "CREATE INDEX entrezid_idx ON yoctogi (entrezid)" yoctogi
+	psql -c "CREATE INDEX speciesname_idx ON yoctogi (speciesname)" yoctogi
+	psql -c "CREATE INDEX speciesname_lower_idx ON yoctogi ((lower(speciesname)))" yoctogi
+	psql -c "CREATE INDEX speciesid_idx ON yoctogi (speciesid)" yoctogi
+	psql -c "CREATE INDEX oboname_idx ON yoctogi (oboname)" yoctogi
+	psql -c "CREATE INDEX oboname_lower_idx ON yoctogi ((lower(oboname)))" yoctogi
+	psql -c "CREATE INDEX oboid_idx ON yoctogi (oboid)" yoctogi
+	psql -c "CREATE INDEX oboid_lower_idx ON yoctogi ((lower(oboid)))" yoctogi
 
-psql -c "CREATE INDEX titles_pmcid_idx ON yoctogi_titles (pmcid)" yoctogi
+	psql -c "CREATE INDEX titles_pmcid_idx ON yoctogi_titles (pmcid)" yoctogi
+fi
 
-echo "Almost done."
-echo ""
-echo "For security, you will have to grant permissions to the 'yoctogi' user manually."
-echo "Do the folling SQL commands manually:"
-echo "  GRANT SELECT ON yoctogi TO yoctogi;"
-echo "  GRANT SELECT ON yoctogi_titles TO yoctogi;"
+if [[ "$db" = 'psql' ]] ; then
+	echo "Almost done."
+	echo ""
+	echo "For security, you will have to grant permissions to the 'yoctogi' user manually."
+	echo "Do the folling SQL commands manually:"
+	echo "  GRANT SELECT ON yoctogi TO yoctogi;"
+	echo "  GRANT SELECT ON yoctogi_titles TO yoctogi;"
+fi
+
+if [[ "$db" = 'mongo' ]] ; then
+	echo -e "use yoctogi\ndb.yoctogi.ensureIndex({pmcid:1})" | mongo
+	echo -e "use yoctogi\ndb.yoctogi.ensureIndex({entrezname:1})" | mongo
+	echo -e "use yoctogi\ndb.yoctogi.ensureIndex({entrezid:1})" | mongo
+	echo -e "use yoctogi\ndb.yoctogi.ensureIndex({speciesname:1})" | mongo
+	echo -e "use yoctogi\ndb.yoctogi.ensureIndex({speciesid:1})" | mongo
+	echo -e "use yoctogi\ndb.yoctogi.ensureIndex({oboname:1})" | mongo
+	echo -e "use yoctogi\ndb.yoctogi.ensureIndex({oboid:1})" | mongo
+	echo -e "use yoctogi\ndb.yoctogi.ensureIndex({entrezname_lowercase:1})" | mongo
+	echo -e "use yoctogi\ndb.yoctogi.ensureIndex({oboname_lowercase:1})" | mongo
+	echo -e "use yoctogi\ndb.yoctogi_titles.ensureIndex({pmcid:1})" | mongo
+fi
+

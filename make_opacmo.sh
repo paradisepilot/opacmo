@@ -49,6 +49,14 @@ fi
 prefix=*
 data_dir=opacmo_data
 
+# Should the data be denormalised? If you plan to use Yoctogi, then you need to denormalize...
+denormalize=1
+
+# If denormalize=1, should we also generate lower case versions of gene-/species- and term-names?
+# This is required if MongoDB is used as a backend, because MongoDB cannot generate to indices on
+# one column.
+lowercase=0
+
 if [[ $# -eq 2 ]] ; then
 	prefix=$2
 fi
@@ -86,8 +94,9 @@ if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] ; then
 	echo "Filtering and joining genes, species and ontology terms..."
 
 	echo " - generating a species white list for filtering species name abbreviations"
-	# Create a list of too generously chosen species names:
-	awk -F "\t" '{print $3"\t"$1}' dictionaries/names.dmp | sort -k 1 > $data_dir/all_species.tmp
+	# Create a whitelist of species names to include. Remove genus entities.
+	awk -F "\t" '{print $3"\t"$1}' dictionaries/names.dmp | grep -E '^.+ [^	]' \
+		| sort -k 1 > $data_dir/all_species.tmp
 	join -t "	" -1 1 -2 1 -o 0,2.2 tmp/species $data_dir/all_species.tmp | uniq \
 		| sort -t "	" -k 2 > $data_dir/whitelist._tmp
 
@@ -97,7 +106,8 @@ if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] ; then
 		terms=$data_dir/`basename "$genes" __genes.tsv`__terms.tsv
 
 		tmp=`dirname "$genes"`
-		out=$data_dir/`basename "$genes" __genes.tsv`__joined.tsv
+		# Postfix is added below. Depends on whether we denormalise or not...
+		out=$data_dir/`basename "$genes" __genes.tsv`
 
 		cut_below 3 $genes
 		cut_below 3 $species
@@ -107,8 +117,14 @@ if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] ; then
 		join -t "	" -1 2 -2 2 -o 1.1,0,1.3 $species.tmp2 $data_dir/whitelist._tmp \
 			| sort -t "	" -k 1 > $species.tmp
 
-		join -t "	" -a 1 -a 2 -1 1 -2 1 -o 0,1.2,1.3,2.2,2.3 $genes.tmp $species.tmp > $tmp/genes_species.tmp
-		join -t "	" -a 1 -a 2 -1 1 -2 1 -o 0,1.2,1.3,1.4,1.5,2.2,2.3 $tmp/genes_species.tmp $terms.tmp > $out
+		if [[ $denormalize -eq 1 ]] ; then
+			join -t "	" -a 1 -a 2 -1 1 -2 1 -o 0,1.2,1.3,2.2,2.3 $genes.tmp $species.tmp > $tmp/genes_species.tmp
+			join -t "	" -a 1 -a 2 -1 1 -2 1 -o 0,1.2,1.3,1.4,1.5,2.2,2.3 $tmp/genes_species.tmp $terms.tmp > ${out}__joined.tsv
+		else
+			cp $genes.tmp ${out}__genes_processed.tsv
+			cp $species.tmp ${out}__species_processed.tsv
+			cp $terms.tmp ${out}__terms_processed.tsv
+		fi
 
 		rm -f $genes.tmp $species.tmp $species.tmp2 $terms.tmp $tmp/*.tmp
 	done
@@ -119,33 +135,89 @@ fi
 if [ "$1" = 'all' ] || [ "$1" = 'yoctogi' ] ; then
 	echo "Adding human readable titles, names and terms..."
 
-	for joined in $data_dir/*__joined.tsv ; do
-		if [ ! -f $joined ] ; then continue ; fi
+	# Extract species names and remove genus entities:
+	echo " - creating a species name dictionary without genus names"
+	grep -E '	.+ [^ ]' species_names.tsv > $data_dir/species_names.tmp
 
-		echo " - processing `basename $joined __joined.tsv`"
+	if [[ $denormalize -eq 1 ]] ; then
+		for joined in $data_dir/*__joined.tsv ; do
+			if [ ! -f $joined ] ; then continue ; fi
 
-		echo "   - generating Yoctogi main table"
+			echo " - processing `basename $joined __joined.tsv`"
 
-		echo "     - adding gene names"
-		sort -k 2 -t "	" $joined > $joined.tmp
-		join -t "	" -a 1 -1 2 -2 1 -o 1.1,2.2,0,1.3,1.4,1.5,1.6,1.7 $joined.tmp gene_names.tsv > $joined.tmp2
+			echo "   - generating Yoctogi main table"
 
-		echo "     - adding ontology term-names"
-		sort -k 7 -t "	" $joined.tmp2 > $joined.tmp
-		join -t "	" -a 1 -1 7 -2 1 -o 1.1,1.2,1.3,1.4,1.5,1.6,2.2,0,1.8 $joined.tmp term_names.tsv > $joined.tmp2
+			echo "     - adding gene names"
+			sort -k 2 -t "	" $joined > $joined.tmp
+			join -t "	" -a 1 -1 2 -2 1 -o 1.1,2.2,0,1.3,1.4,1.5,1.6,1.7 $joined.tmp gene_names.tsv \
+				| awk -F "\t" '{if ($3 == "" || $2 != "") {print $0}}' > $joined.tmp2
 
-		echo "     - adding species names"
-		sort -k 5 -t "	" $joined.tmp2 > $joined.tmp
-		join -t "	" -a 1 -1 5 -2 1 -o 1.1,1.2,1.3,1.4,2.2,0,1.6,1.7,1.8,1.9 $joined.tmp species_names.tsv \
-			> $data_dir/`basename $joined __joined.tsv`__yoctogi.tsv
+			echo "     - adding ontology term-names"
+			sort -k 7 -t "	" $joined.tmp2 > $joined.tmp
+			join -t "	" -a 1 -1 7 -2 1 -o 1.1,1.2,1.3,1.4,1.5,1.6,2.2,0,1.8 $joined.tmp term_names.tsv \
+				| awk -F "\t" '{if ($8 == "" || $7 != "") {print $0}}' > $joined.tmp2
 
-                echo "   - generating Yoctogi dimension table"
+			echo "     - adding species names"
+			sort -k 5 -t "	" $joined.tmp2 > $joined.tmp
+			join -t "	" -a 1 -1 5 -2 1 -o 1.1,1.2,1.3,1.4,2.2,0,1.6,1.7,1.8,1.9 $joined.tmp $data_dir/species_names.tmp \
+				| awk -F "\t" '{if ($6 == "" || $5 != "") {print $0}}' > $joined.tmp2
 
-		echo "     - publication titles"
-		join -t "	" -1 1 -2 1 -o 0,2.2 $joined titles.tsv | uniq \
-			> $data_dir/`basename $joined __joined.tsv`__yoctogi_titles.tsv
+			# Convert text fields to lowercase for use with MongoDB. Only convert those fields
+			# for which no programmatic solution can be provided to look up even case-sensitive
+			# entries.
+			if [ $lowercase -eq 1 ] ; then
+				echo "     - adding lower case versions of gene- and term-names"
+				awk -F "\t" '{
+						gene="";
+						if ($2 ~ /[A-Z]/) {gene=tolower($2)};
+						term="";
+						if ($8 ~ /[A-Z]/) {term=tolower($8)};
+						print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10"\t"gene"\t"term
+					}' $joined.tmp2 \
+					> $data_dir/`basename $joined __joined.tsv`__yoctogi.tsv
+			else
+				mv $joined.tmp2 $data_dir/`basename $joined __joined.tsv`__yoctogi.tsv
+			fi
 
-		rm -f $joined.tmp $joined.tmp2
-	done
+			echo "   - generating Yoctogi dimension table"
+
+			echo "     - publication titles"
+			join -t "	" -1 1 -2 1 -o 0,2.2 $joined titles.tsv | uniq \
+				> $data_dir/`basename $joined __joined.tsv`__yoctogi_titles.tsv
+
+			rm -f $joined.tmp $joined.tmp2
+		done
+	else
+		for genes in $data_dir/*__genes_processed.tsv ; do
+			if [ ! -f $genes ] ; then continue ; fi
+
+			echo " - processing `basename $genes __genes_processed.tsv`"
+			species=$data_dir/`basename "$genes" __genes_processed.tsv`__species_processed.tsv
+			terms=$data_dir/`basename "$genes" __genes_processed.tsv`__terms_processed.tsv
+
+			# Postfix is added below.
+			out=$data_dir/`basename $genes __genes_processed.tsv`
+
+			echo "   - adding gene names"
+			sort -k 2 -t "	" $genes > $genes.tmp
+			join -t "	" -a 1 -1 2 -2 1 -o 1.1,2.2,0,1.3 $genes gene_names.tsv > ${out}__yoctogi_genes.tsv
+
+			echo "   - adding ontology term-names"
+			sort -k 2 -t "	" $terms > $terms.tmp
+			join -t "	" -a 1 -1 2 -2 1 -o 1.1,2.2,0,1.3 $terms term_names.tsv > ${out}__yoctogi_terms.tsv
+
+			echo "   - adding species names"
+			sort -k 2 -t "	" $species > $species.tmp
+			join -t "	" -a 1 -1 2 -2 1 -o 1.1,2.2,0,1.3 $species $data_dir/species_names.tmp > ${out}__yoctogi_species.tsv
+
+			echo "   - adding publication titles"
+			join -t "	" -1 1 -2 1 -o 0,2.2 $genes titles.tsv | uniq \
+				> ${out}__yoctogi_titles.tsv
+
+			rm -f $genes.tmp $terms.tmp $species.tmp
+		done
+	fi
+
+	rm -f $data_dir/species_names.tmp
 fi
 
