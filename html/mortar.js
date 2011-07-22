@@ -29,13 +29,17 @@ var suggestionColumns = {};
 var processQueryTimeOutID = 0;
 
 var column2Header = {
-		'pmcid':       'PMC ID',
-		'entrezname':  'Entrez Gene',
-		'entrezid':    'Entrez ID',
-		'speciesname': 'Species Name',
-		'speciesid':   'Species ID',
-		'oboname':     'OBO Term Name',
-		'oboid':       'OBO ID'
+		'titles':	'Title',
+		'pmcid':        'PMC ID',
+		'entrezname':   'Entrez Gene',
+		'entrezid':     'Entrez ID',
+		'entrezscore':  'bioknack Score',
+		'speciesname':  'Species Name',
+		'speciesid':    'Species ID',
+		'speciesscore': 'bioknack Score',
+		'oboname':      'OBO Term Name',
+		'oboid':        'OBO ID',
+		'oboscore':     'bioknack Score'
 	};
 
 var suggestionRequest = new Request.JSON({
@@ -60,7 +64,7 @@ var suggestionRequest = new Request.JSON({
 				if (partialResult.length == 0)
 					continue;
 
-				var id = makeTable($('suggestioncontainer'), partialResult, [column2Header[result]]);
+				var id = makeTable($('suggestioncontainer'), partialResult, [column2Header[result]], false);
 
 				suggestionColumns[id] = result;
 			}
@@ -76,6 +80,51 @@ var resultRequest = new Request.JSON({
 				alert(response);
 				return;
 			}
+
+			$('resultcontainer').empty();
+			for (var pmcid in response.result) {
+				var pmcInfo = new Element('div#pmc' + pmcid, {
+					'class': 'pmccontainer'
+				});
+				var title = new Element('div#title' + pmcid, {
+					'class': 'titlecontainer'
+				});
+				var genes = new Element('div#genes' + pmcid, {
+					'class': 'genescontainer'
+				});
+				var species = new Element('div#species' + pmcid, {
+					'class': 'speciescontainer'
+				});
+				var terms = new Element('div#terms' + pmcid, {
+					'class': 'termscontainer'
+				});
+				for (var i in response.result[pmcid]) {
+					//makeTable($('resultcontainer'), response.result[pmcid][batch], null, true)
+					var batch = response.result[pmcid][i];
+
+					if (!batch.selection)
+						continue;
+
+					if (batch.selection[0] == 'titles')
+						title.set('html', batch.result[0][2]);
+					else if (batch.selection[0] == 'entrezname') {
+						for (var row = 0; row < batch.result.length; row++)
+							makeRow('Genes:', 'genelink', row, genes, batch.result[row][0], batch.result[row][1], batch.result[row][2]);
+					} else if (batch.selection[0] == 'speciesname') {
+						for (var row = 0; row < batch.result.length; row++)
+							makeRow('Species:', 'specieslink', row, species, batch.result[row][0], batch.result[row][1], batch.result[row][2]);
+					} else if (batch.selection[0] == 'oboname') {
+						for (var row = 0; row < batch.result.length; row++)
+							makeRow('Terms:', 'obolink', row, terms, batch.result[row][0], batch.result[row][1], batch.result[row][2]);
+					}
+				}
+				title.inject(pmcInfo);
+				genes.inject(pmcInfo);
+				species.inject(pmcInfo);
+				terms.inject(pmcInfo);
+				pmcInfo.inject($('resultcontainer'));
+			}
+			return;
 
 			$('resultcontainer').empty();
 			makeTable($('resultcontainer'), response.result, [
@@ -94,6 +143,24 @@ var resultRequest = new Request.JSON({
 			]);
 		}
 	});
+
+function makeRow(header, clazz, row, container, name, id, score) {
+	if (row == 0) {
+		var label = new Element('span', { 'class': 'linkedlabel' })
+		label.appendText(header);
+		label.inject(container);
+	}
+
+	var gene = new Element('a', {
+		'class': clazz,
+		'href': 'http://www.guardian.co.uk/',
+		'target': '_blank'
+	});
+
+	gene.set('html', name +
+		'&nbsp;(' + id + '&nbsp;/&nbsp;score&nbsp;' + score + ') ');
+	gene.inject(container);
+}
 
 function clearSuggestions() {
 	var suggestions = $('suggestioncontainer').getChildren();
@@ -126,16 +193,34 @@ function discardSelection() {
 
 }
 
-function makeTable(container, matrix, headers) {
+function makeTable(container, matrix, headers, result) {
 	var options = {
 		properties: {
 			border: 0,
 			cellspacing: 5
 		},
-		rows: matrix,
 		selectable: true,
 		allowMultiSelect: false
 	};
+
+	if (result) {
+		options['rows'] = matrix.result;
+		headers = [];
+
+		if (!headers)
+			return;
+
+		if (headers[0] == 'titles')
+			headers = [
+				column2Header['pmcid'],
+				column2Header['pmcid'],
+				column2Header['titles']
+			];
+		else
+			for (var column in matrix.selection)
+				headers.push(column2Header[matrix.selection[column]]);
+	} else
+		options['rows'] = matrix;
 
 	if (headers)
 		options['headers'] = headers;
@@ -259,8 +344,19 @@ function runConjunctiveQuery() {
 	if (yoctogiClausesLength == 0)
 		return;
 
-	var yoctogiOptions = {}
-	var yoctogiRequest = { clauses: yoctogiClauses, dimensions: { titles: 'pmcid' }, options: yoctogiOptions  }
+	var yoctogiOptions = { distinct: true, notempty: 0, orderby: 2, orderdescending: true }
+	var yoctogiRequest = {
+		aggregate: {
+			pmcid: [
+				['entrezname', 'entrezid', 'entrezscore'],
+				['speciesname','speciesid','speciesscore'],
+				['oboname', 'oboid', 'oboscore']
+			]
+		},
+		clauses: yoctogiClauses,
+		dimensions: { titles: 'pmcid' },
+		options: yoctogiOptions
+	}
 
 	resultRequest.send(JSON.encode(yoctogiRequest));
 }

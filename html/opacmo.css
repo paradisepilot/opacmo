@@ -11,6 +11,69 @@ input {
 	width: 100%;
 }
 
+a {
+	font-style: normal;
+	font-weight: normal;
+	text-decoration: none;
+	color: #555555;
+}
+
+a:hover {
+	color: #00709b;
+	cursor: pointer;
+}
+
+.pmccontainer {
+	display: table;
+	overflow: auto;
+	padding-top: 15px;
+}
+
+.linkedlabel {
+	font-style: italic;
+	padding-right: 8pt;
+	color: #888888;
+}
+
+.titlecontainer {
+	font-size: 12pt;
+	font-weight: bold;
+	color: #555555;
+}
+
+.titlecontainer:hover {
+	color: #00709b;
+        cursor: pointer;
+}
+
+.genescontainer {
+	float: left;
+	font-size: 11pt;
+	color: #ff0000;
+}
+
+.genelink {
+	padding-right: 10pt;
+}
+
+.specieslink {
+	padding-right: 10pt;
+}
+
+.obolink {
+	padding-right: 10pt;
+}
+
+.speciescontainer {
+	font-size: 11pt;
+	color: #00ff00;
+}
+
+.termscontainer {
+	font-size: 11pt;
+	color: #ff00ff;
+}
+
 #caseswitch {
 	display: block;
 	font-family: courier;
