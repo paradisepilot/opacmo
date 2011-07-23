@@ -9,11 +9,11 @@
  */
 
 var showHelpMessages = true;
-var showHelpMessagesElement = new Element('div#helpmessages', { 'class': 'headerswitch' });
+var showHelpMessagesElement = new Element('div#helpmessages', { 'class': 'optionsswitch' });
 var aboutSlider = null;
 var aboutSwitch = new Element('div#aboutswitch');
 var caseSwitch = false;
-var caseSwitchElement = new Element('div#caseswitch');
+var caseSwitchElement = new Element('div#caseswitch', { 'class': 'optionsswitch' });
 var helperSliders = {};
 
 var queryOverText = null;
@@ -28,6 +28,8 @@ var suggestionColumns = {};
 
 var processQueryTimeOutID = 0;
 
+var selectedEntities = {};
+
 var column2Header = {
 		'titles':	'Title',
 		'pmcid':        'PMC ID',
@@ -41,6 +43,16 @@ var column2Header = {
 		'oboid':        'OBO ID',
 		'oboscore':     'bioknack Score'
 	};
+
+var header2ResultHeader = {
+		'PMC ID':	'PMC ID',
+		'Entrez Gene':	'Genes:',
+		'Entrez ID':	'Genes:',
+		'Species Name':	'Species:',
+		'Species ID':	'Species:',
+		'OBO Term Name':'Terms:',
+		'OBO ID':	'Terms:'
+};
 
 var suggestionRequest = new Request.JSON({
 		url: 'http://opacmo.org/yoctogi.fcgi',
@@ -105,17 +117,34 @@ var resultRequest = new Request.JSON({
 					if (!batch.selection)
 						continue;
 
-					if (batch.selection[0] == 'titles')
-						title.set('html', batch.result[0][2]);
-					else if (batch.selection[0] == 'entrezname') {
+					if (batch.selection[0] == 'titles') {
+						var clazz = 'resulttitle';
+						if (selectedEntities['PMC ID%' + batch.result[0][0]])
+							clazz = 'resulttitle-selected';
+
+						var entity = new Element('a', {
+							'class': clazz,
+							'href': 'http://www.ncbi.nlm.nih.gov/pmc/articles/' + batch.result[0][0],
+							'target': '_blank'
+						});
+
+						entity.set('html', batch.result[0][0] + '&nbsp;&mdash;&nbsp;' + batch.result[0][2]);
+						entity.inject(title);
+
+						//title.set('html', batch.result[0][2]);
+					} else if (batch.selection[0] == 'entrezname') {
 						for (var row = 0; row < batch.result.length; row++)
-							makeRow('Genes:', 'genelink', row, genes, batch.result[row][0], batch.result[row][1], batch.result[row][2]);
+							makeRow('Genes:', 'resultlink', row, genes, batch.result[row][0], batch.result[row][1], batch.result[row][2], 'http://www.ncbi.nlm.nih.gov/gene/' + batch.result[row][1]);
 					} else if (batch.selection[0] == 'speciesname') {
 						for (var row = 0; row < batch.result.length; row++)
-							makeRow('Species:', 'specieslink', row, species, batch.result[row][0], batch.result[row][1], batch.result[row][2]);
+							makeRow('Species:', 'resultlink', row, species, batch.result[row][0], batch.result[row][1], batch.result[row][2], 'http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=' + batch.result[row][1]);
 					} else if (batch.selection[0] == 'oboname') {
-						for (var row = 0; row < batch.result.length; row++)
-							makeRow('Terms:', 'obolink', row, terms, batch.result[row][0], batch.result[row][1], batch.result[row][2]);
+						for (var row = 0; row < batch.result.length; row++) {
+							var linkOut = 'http://www.ebi.ac.uk/ontology-lookup/browse.do?ontName=DOID&termId=DOID%3A' + batch.result[row][1].replace(/^[^:]+:/, '');
+							if (batch.result[row][1].indexOf('GO:') == 0)
+								linkOut = 'http://amigo.geneontology.org/cgi-bin/amigo/term_details?term=' + batch.result[row][1];
+							makeRow('Terms:', 'resultlink', row, terms, batch.result[row][0], batch.result[row][1], batch.result[row][2], linkOut);
+						}
 					}
 				}
 				title.inject(pmcInfo);
@@ -124,42 +153,49 @@ var resultRequest = new Request.JSON({
 				terms.inject(pmcInfo);
 				pmcInfo.inject($('resultcontainer'));
 			}
-			return;
-
-			$('resultcontainer').empty();
-			makeTable($('resultcontainer'), response.result, [
-				'PMC ID',
-				'Entrez Gene',
-				'Entrez ID',
-				'Entrez Score',
-				'Species Name',
-				'Species ID',
-				'Species Score',
-				'OBO Term Name',
-				'OBO ID',
-				'OBO Score',
-				'PMC ID',
-				'PMC Title'
-			]);
 		}
 	});
 
-function makeRow(header, clazz, row, container, name, id, score) {
+function makeRow(header, clazz, row, container, name, id, score, linkOut) {
 	if (row == 0) {
 		var label = new Element('span', { 'class': 'linkedlabel' })
 		label.appendText(header);
 		label.inject(container);
 	}
 
-	var gene = new Element('a', {
+	if (selectedEntities[header + '%' + name] || selectedEntities[header + '%' + id])
+		clazz = clazz + '-selected';
+
+	clipped_score = score < 5 ? 5 : score;
+	clipped_score = score > 15 ? 15 : clipped_score;
+
+	var entity = new Element('a', {
 		'class': clazz,
-		'href': 'http://www.guardian.co.uk/',
+		'style': 'border-color: #' + (clipped_score).toString(16) + '55555;',
+		'href': linkOut,
 		'target': '_blank'
 	});
 
-	gene.set('html', name +
+	entity.set('html', '&nbsp;' + name.replace(/ /g, '&nbsp;') +
 		'&nbsp;(' + id + '&nbsp;/&nbsp;score&nbsp;' + score + ') ');
-	gene.inject(container);
+	entity.inject(container);
+}
+
+function presentSuggestion(title) {
+	var suggestions = $('suggestioncontainer').getChildren();
+
+	if (!suggestions)
+		return false;
+
+	for (var i = 0; i < suggestions.length; i++) {
+		var table = suggestionTables[suggestions[i].id];
+
+		if (table && table.getSelected().length != 0 &&
+			table.getHead().getChildren()[0].innerHTML == title)
+			return true;
+	}
+
+	return false;
 }
 
 function clearSuggestions() {
@@ -222,15 +258,18 @@ function makeTable(container, matrix, headers, result) {
 	} else
 		options['rows'] = matrix;
 
-	if (headers)
+	if (headers) {
+		if (headers.length == 1 && presentSuggestion(headers[0]))
+			return;
+
 		options['headers'] = headers;
+	}
 
 	var id = 's' + suggestionTableCounter++;
 	var wrapper = new Element('div#' + id);
 
 	var closeButton = new Element('img#c' + id, {
 		'class': 'closebutton',
-		title: 'Remove from query.',
 		src: '/images/gray_light/x_alt_12x12.png'
 	});
 	closeButton.addEvent('click', function() {
@@ -241,6 +280,7 @@ function makeTable(container, matrix, headers, result) {
 
 		fadeOut.addEvent('complete', function() {
 			$(id).dispose();
+			runConjunctiveQuery();
 		});
 
 		fadeOut.start({
@@ -248,7 +288,7 @@ function makeTable(container, matrix, headers, result) {
 		});
 	});
 	closeButton.addEvent('mouseover', function() {
-		closeButton.setProperty('src', '/images/cyan/x_alt_12x12.png');
+		closeButton.setProperty('src', '/images/red/x_alt_12x12.png');
 	});
 	closeButton.addEvent('mouseleave', function() {
 		closeButton.setProperty('src', '/images/gray_light/x_alt_12x12.png');
@@ -303,14 +343,22 @@ function processQuery() {
 	}
 
 	var yoctogiClauses = {
-		pmcid: query,
-		entrezid: query,
-		entrezname: query,
-		speciesid: query,
-		speciesname: query,
-		oboid: query,
-		oboname: query
+		entrezname: query
 	};
+
+	if (query.toUpperCase().match(/^(P|PM|PMC|PMC\d+)$/))
+		yoctogiClauses['pmcid'] = query;
+	if (query.match(/^[a-zA-Z].*$/)) {
+		yoctogiClauses['speciesname'] = query;
+		yoctogiClauses['oboname'] = query;
+	}
+	if (query.match(/^\d+$/)) {
+		yoctogiClauses['entrezid'] = query;
+		yoctogiClauses['speciesid'] = query;
+	}
+	if (query.toUpperCase().match(/^(D|DO|DO:|DOI:|DOID:|DOID:\d+|G|GO|GO:|GO:\d+)$/))
+		yoctogiClauses['oboid'] = query;
+
 	var yoctogiOptions = { like: true, batch: true, distinct: true, caseinsensitive: !caseSwitch }
 
 	var yoctogiRequest = { clauses: yoctogiClauses, options: yoctogiOptions  }
@@ -325,6 +373,8 @@ function runConjunctiveQuery() {
 	if (!suggestions)
 		return;
 
+	selectedEntities = {};
+
 	var yoctogiClausesLength = 0;
 	var yoctogiClauses = {};
 
@@ -337,6 +387,8 @@ function runConjunctiveQuery() {
 			for (var j = 0; j < selectedTDs.length; j++) {
 				yoctogiClausesLength++;
 				yoctogiClauses[suggestionColumns[suggestions[i].id]] = selectedTDs[j].innerHTML;
+				selectedEntities[header2ResultHeader[table.head.getChildren()[0].innerHTML] +
+					'%' + selectedTDs[j].innerHTML] = true;;
 			}
 		}
 	}
@@ -393,7 +445,7 @@ $(window).onload = function() {
 	});
 	$('aboutswitch').innerHTML = 'Show About';
 
-	showHelpMessagesElement.inject($('header'));
+	showHelpMessagesElement.inject($('options'));
 	showHelpMessagesElement.addEvent('click', function() {
 		showHelpMessages = showHelpMessages ? false : true;
 		updateHelpMessagesSwitch();
@@ -410,7 +462,7 @@ $(window).onload = function() {
 	});
 	updateHelpMessagesSwitch();
 
-	caseSwitchElement.inject($('querycontainer'));
+	caseSwitchElement.inject($('options'));
 	caseSwitchElement.addEvent('click', function() {
 		caseSwitch = caseSwitch ? false : true;
 		updateCaseSwitch();

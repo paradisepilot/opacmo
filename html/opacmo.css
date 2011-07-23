@@ -52,41 +52,59 @@ a:hover {
 	color: #ff0000;
 }
 
-.genelink {
-	padding-right: 10pt;
+.resulttitle {
+	font-weight: bold;
 }
 
-.specieslink {
-	padding-right: 10pt;
+.resulttitle-selected {
+	color: #8bcc00;
+	font-weight: bold;
+	font-style: italic;
 }
 
-.obolink {
-	padding-right: 10pt;
+.resultlink {
+	margin-right: 15pt;
+	border-radius: 7px;
+	-moz-border-radius: 7px;
+	border-left-style: solid;
+	border-left-width: 10pt;
+}
+
+.resultlink-selected {
+	color: #8bcc00;
+	font-style: italic;
+	margin-right: 15pt;
+	border-radius: 7px;
+	-moz-border-radius: 7px;
+	border-left-style: solid;
+	border-left-width: 10pt;
 }
 
 .speciescontainer {
 	font-size: 11pt;
-	color: #00ff00;
 }
 
 .termscontainer {
 	font-size: 11pt;
-	color: #ff00ff;
 }
 
-#caseswitch {
+.optionsswitch {
 	display: block;
+	color: #ffffff;
 	font-family: courier;
 	font-size: 10pt;
-	float: right;
+	float: left;
 	cursor: pointer;
+	margin-top: 4pt;
+	margin-left: 10pt;
+	margin-right: 10pt;
 	margin-bottom: 3pt;
 	padding: 2pt;
 }
 
-#caseswitch:hover {
-	background-color: #00adee;
-	color: #ffffff;
+.optionsswitch:hover {
+	background-color: #bEb1b0;
+	color: #000000;
 	border-radius: 3pt;
 	-moz-border-radius: 3pt;
 }
@@ -107,10 +125,11 @@ a:hover {
 	background-color: #666666;
 	border-radius: 3pt;
 	-moz-border-radius: 3pt;
+	cursor: pointer;
 }
 
 .closebutton:hover {
-	background-color: #d0d0d0;
+	background-color: #664444;
 }
 
 #logo {
@@ -127,6 +146,17 @@ a:hover {
 
 #header {
 	background-color: #d0d0d0;
+	font-family: courier;
+	border-radius: 11pt;
+	-moz-border-radius: 11pt;
+	height: 22pt;
+	width: 100%;
+	margin-top: 20px;
+	margin-bottom: 20pt;
+}
+
+#options {
+	background-color: #5E5150;
 	font-family: courier;
 	border-radius: 11pt;
 	-moz-border-radius: 11pt;
@@ -185,23 +215,6 @@ a:hover {
 	display: table-cell;
 	padding-right: 7pt;
 	vertical-align: middle;
-}
-
-.headerswitch {
-	color: #333333;
-	font-size: 10pt;
-	float: right;
-	margin-top: 4pt;
-	margin-left: 10pt;
-	margin-right: 10pt;
-	padding: 2pt;
-	cursor: pointer;
-}
-
-.headerswitch:hover {
-	background-color: #a0a0a0;
-	border-radius: 3pt;
-	-moz-border-radius: 3pt;
 }
 
 .row {
@@ -264,6 +277,7 @@ a:hover {
 	display: block;
 	float: left;
 	width: 100%;
+	line-height: 175%;
 }
 
 .suggestiontable {
@@ -276,12 +290,13 @@ table {
 }
 
 tr.table-tr-hovered {
-	color: #00709b;
+	color: #4b7c00;
 	cursor: pointer;
 }
 
 tr.table-tr-selected {
-	color: #00adee;
+	color: #8bcc00;
+	font-style: italic;
 }
 
 td.suggestiontable {
