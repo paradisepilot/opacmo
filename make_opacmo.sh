@@ -3,6 +3,11 @@
 PATH=$PATH:./bioknack
 IFS=$(echo -e -n "\n\b")
 
+# Needed to handle 'interesting' implementation of `sort`/`join` on Linux:
+LANG="C"
+LC_ALL="C"
+LC_COLLATE="C"
+
 # This is actually not used, but preserved here for future applications.
 #
 # Parameters:
@@ -41,7 +46,7 @@ if [[ $# -lt 1 ]] || [[ $# -gt 2 ]] ; then
 	exit
 fi
 
-if [ "$1" != 'all' ] && [ "$1" != 'get' ] && [ "$1" != 'ner' ] && [ "$1" != 'tsv' ] && [ "$1" != 'yoctogi' ] ; then
+if [ "$1" != 'all' ] && [ "$1" != 'get' ] && [ "$1" != 'dictionaries' ] && [ "$1" != 'ner' ] && [ "$1" != 'tsv' ] && [ "$1" != 'labels' ] && [ "$1" != 'yoctogi' ] ; then
 	echo "TODO: help message"
 	exit
 fi
@@ -63,9 +68,15 @@ fi
 
 if [ "$1" = 'all' ] || [ "$1" = 'get' ] ; then
 	date > DATA_INFO
+	mkdir input dictionaries tmp
 	bk_ner_gn.sh minimal
 	bk_ner_gn.sh obo
 	bk_ner_gn.sh pmc
+fi
+
+if [ "$1" = 'all' ] || [ "$1" = 'dictionaries' ] ; then
+	bk_ner_gn.sh genes
+	bk_ner_gn.sh species
 fi
 
 if [ "$1" = 'all' ] || [ "$1" = 'ner' ] ; then
@@ -96,9 +107,10 @@ if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] ; then
 	echo " - generating a species white list for filtering species name abbreviations"
 	# Create a whitelist of species names to include. Remove genus entities.
 	awk -F "\t" '{print $3"\t"$1}' dictionaries/names.dmp | grep -E '^.+ [^	]' \
-		| sort -k 1 > $data_dir/all_species.tmp
-	join -t "	" -1 1 -2 1 -o 0,2.2 tmp/species $data_dir/all_species.tmp | uniq \
-		| sort -t "	" -k 2 > $data_dir/whitelist._tmp
+		| sort -t "	" -k 1,1 > $data_dir/all_species.tmp
+	sort -k 1,1 -t "	" tmp/species > $data_dir/species.tmp
+	join -t "	" -1 1 -2 1 -o 0,2.2 $data_dir/species.tmp $data_dir/all_species.tmp | uniq \
+		| sort -t "	" -k 2,2 > $data_dir/whitelist._tmp
 
 	for genes in $data_dir/*__genes.tsv ; do
 		echo " - processing `basename "$genes" __genes.tsv`..."
@@ -113,7 +125,7 @@ if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] ; then
 		cut_below 3 $species
 		cut_below 3 $terms
 
-		sort -t "	" -k 2 $species.tmp > $species.tmp2
+		sort -t "	" -k 2,2 $species.tmp > $species.tmp2
 		join -t "	" -1 2 -2 2 -o 1.1,0,1.3 $species.tmp2 $data_dir/whitelist._tmp \
 			| sort -t "	" -k 1 > $species.tmp
 
@@ -132,6 +144,11 @@ if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] ; then
 	rm -f $data_dir/all_species.tmp $data_dir/whitelist._tmp
 fi
 
+if [ "$1" = 'all' ] || [ "$1" = 'labels' ] ; then
+	echo "Generate labels for gene-, species- and ontology-identifiers..."
+	bk_ner_fmt_labels.sh
+fi
+
 if [ "$1" = 'all' ] || [ "$1" = 'yoctogi' ] ; then
 	echo "Adding human readable titles, names and terms..."
 
@@ -148,17 +165,17 @@ if [ "$1" = 'all' ] || [ "$1" = 'yoctogi' ] ; then
 			echo "   - generating Yoctogi main table"
 
 			echo "     - adding gene names"
-			sort -k 2 -t "	" $joined > $joined.tmp
+			sort -k 2,2 -t "	" $joined > $joined.tmp
 			join -t "	" -a 1 -1 2 -2 1 -o 1.1,2.2,0,1.3,1.4,1.5,1.6,1.7 $joined.tmp gene_names.tsv \
 				| awk -F "\t" '{if ($3 == "" || $2 != "") {print $0}}' > $joined.tmp2
 
 			echo "     - adding ontology term-names"
-			sort -k 7 -t "	" $joined.tmp2 > $joined.tmp
+			sort -k 7,7 -t "	" $joined.tmp2 > $joined.tmp
 			join -t "	" -a 1 -1 7 -2 1 -o 1.1,1.2,1.3,1.4,1.5,1.6,2.2,0,1.8 $joined.tmp term_names.tsv \
 				| awk -F "\t" '{if ($8 == "" || $7 != "") {print $0}}' > $joined.tmp2
 
 			echo "     - adding species names"
-			sort -k 5 -t "	" $joined.tmp2 > $joined.tmp
+			sort -k 5,5 -t "	" $joined.tmp2 > $joined.tmp
 			join -t "	" -a 1 -1 5 -2 1 -o 1.1,1.2,1.3,1.4,2.2,0,1.6,1.7,1.8,1.9 $joined.tmp $data_dir/species_names.tmp \
 				| awk -F "\t" '{if ($6 == "" || $5 != "") {print $0}}' > $joined.tmp2
 
@@ -199,15 +216,15 @@ if [ "$1" = 'all' ] || [ "$1" = 'yoctogi' ] ; then
 			out=$data_dir/`basename $genes __genes_processed.tsv`
 
 			echo "   - adding gene names"
-			sort -k 2 -t "	" $genes > $genes.tmp
+			sort -k 2,2 -t "	" $genes > $genes.tmp
 			join -t "	" -a 1 -1 2 -2 1 -o 1.1,2.2,0,1.3 $genes gene_names.tsv > ${out}__yoctogi_genes.tsv
 
 			echo "   - adding ontology term-names"
-			sort -k 2 -t "	" $terms > $terms.tmp
+			sort -k 2,2 -t "	" $terms > $terms.tmp
 			join -t "	" -a 1 -1 2 -2 1 -o 1.1,2.2,0,1.3 $terms term_names.tsv > ${out}__yoctogi_terms.tsv
 
 			echo "   - adding species names"
-			sort -k 2 -t "	" $species > $species.tmp
+			sort -k 2,2 -t "	" $species > $species.tmp
 			join -t "	" -a 1 -1 2 -2 1 -o 1.1,2.2,0,1.3 $species $data_dir/species_names.tmp > ${out}__yoctogi_species.tsv
 
 			echo "   - adding publication titles"
