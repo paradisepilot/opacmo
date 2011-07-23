@@ -93,7 +93,25 @@ var resultRequest = new Request.JSON({
 				return;
 			}
 
+			if (response.download) {
+				var type = response.download.replace(/^[^.]+\./, '')
+				var link = new Element('a#downloadlink' + type, {
+					'class': 'downloadlink',
+					'href': 'http://opacmo.org/' + response.download,
+					'html': '&nbsp;Download Link&nbsp;',
+					'target': '_blank'
+				});
+				link.inject($('download' + type));
+				new Fx.Slide('downloadlink' + type, { mode: 'vertical', duration: 'short' }).hide().toggle();
+
+				return;
+			}
+
 			$('resultcontainer').empty();
+
+			makeDownload('tsv');
+			makeDownload('xls');
+
 			for (var pmcid in response.result) {
 				var pmcInfo = new Element('div#pmc' + pmcid, {
 					'class': 'pmccontainer'
@@ -111,7 +129,6 @@ var resultRequest = new Request.JSON({
 					'class': 'termscontainer'
 				});
 				for (var i in response.result[pmcid]) {
-					//makeTable($('resultcontainer'), response.result[pmcid][batch], null, true)
 					var batch = response.result[pmcid][i];
 
 					if (!batch.selection)
@@ -155,6 +172,19 @@ var resultRequest = new Request.JSON({
 			}
 		}
 	});
+
+function makeDownload(format) {
+	var downloadButton = new Element('div#download' + format, {
+		'class': 'downloadbutton',
+		'html': format.toUpperCase()
+	});
+	downloadButton.addEvent('click', function() {
+		downloadButton.removeEvents();
+		downloadButton.set('class', 'downloadbutton-selected');
+		runConjunctiveQuery(format);
+	});
+	downloadButton.inject($('resultdownloads'));
+}
 
 function makeRow(header, clazz, row, container, name, id, score, linkOut) {
 	if (row == 0) {
@@ -367,7 +397,7 @@ function processQuery() {
 	suggestionRequest.send(JSON.encode(yoctogiRequest));
 }
 
-function runConjunctiveQuery() {
+function runConjunctiveQuery(format) {
 	var suggestions = $('suggestioncontainer').getChildren();
 
 	if (!suggestions)
@@ -397,6 +427,10 @@ function runConjunctiveQuery() {
 		return;
 
 	var yoctogiOptions = { distinct: true, notempty: 0, orderby: 2, orderdescending: true }
+
+	if (format)
+		yoctogiOptions['format'] = format
+
 	var yoctogiRequest = {
 		aggregate: {
 			pmcid: [

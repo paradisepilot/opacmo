@@ -109,6 +109,59 @@ a:hover {
 	-moz-border-radius: 3pt;
 }
 
+.downloadbutton {
+	display: inline;
+	width: 100pt;
+	color: #555555;
+	background-color: #d0d0d0;
+	font-family: courier;
+	font-size: 10pt;
+	text-align: center;
+	float: right;
+	cursor: pointer;
+	margin-right: 10pt;
+	padding: 2pt;
+	border-radius: 5pt;
+	-moz-border-radius: 5pt;
+}
+
+.downloadbutton-selected {
+	display: inline;
+	width: 100pt;
+	background-color: #ffffff;
+	color: #000000;
+	font-family: courier;
+	font-size: 10pt;
+	text-align: center;
+	float: right;
+	cursor: pointer;
+	margin-right: 10pt;
+	padding: 2pt;
+	border-radius: 5pt;
+	-moz-border-radius: 5pt;
+}
+
+.downloadbutton-selected:hover {
+	cursor: default;
+}
+
+.downloadbutton:hover {
+	background-color: #a0a0a0;
+	color: #000000;
+	cursor: pointer;
+}
+
+.downloadlink {
+	color: #ffffff;
+	background-color: #8BCC00;
+	margin-top: 5pt;
+}
+
+.downloadlink:hover {
+	background-color: #bbfc00;
+	cursor: pointer;
+}
+
 .overTxtLabel {
 	color: #aaaaaa;
 	font-style: italic;
@@ -278,6 +331,12 @@ a:hover {
 	float: left;
 	width: 100%;
 	line-height: 175%;
+}
+	
+#resultdownloads {
+	display: block;
+	float: left;
+	width: 100%;
 }
 
 .suggestiontable {
