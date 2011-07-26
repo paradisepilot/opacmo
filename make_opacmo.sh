@@ -41,14 +41,45 @@ cut_below() {
 		| sort -k 1 > $2.tmp
 }
 
+check_dir() {
+	if [ ! -d "./$1" ] ; then
+		echo "This script needs to be executed where './$1' is present."
+		echo ""
+		echo "In other words: the directory '$1' needs to be found in the"
+		echo "current working directory when you execute this script."
+		exit 1
+	fi
+}
+
+help_message() {
+	echo "Usage: make_opacmo.sh command [prefix]"
+	echo ""
+	echo "Valid options for 'command':"
+	echo "  all          : all of the options below in the listed order"
+	echo "  freeze       : jot down the current state of opacmo/bioknack for versioning"
+	echo "  get          : download gene and species databases, ontologies and PMC archive"
+	echo "  dictionaries : create dictionaries for bioknack's named entity recognition"
+	echo "  ner          : run bioknack's named entity recognition ('prefix' applicable)"
+	echo "  tsv          : filter and join NER output into TSV files"
+	echo "  labels       : create TSV files that map identifiers to readable names"
+	echo "  yoctogi      : create denormalized TSV files for loading into Yoctogi"
+	echo ""
+	echo "The optinal parameter 'prefix' can be used to carry out a NER run on"
+	echo "a subset of PMC. For example, the prefix '\"BMC_*\"' restricts the NER run"
+	echo "to journal directories starting with 'BMC_'."
+}
+
+check_dir 'opacmo'
+check_dir 'bioknack'
+
 if [[ $# -lt 1 ]] || [[ $# -gt 2 ]] ; then
-	echo "TODO: help message"
+	help_message
 	exit
 fi
 
-if [ "$1" != 'all' ] && [ "$1" != 'get' ] && [ "$1" != 'dictionaries' ] && [ "$1" != 'ner' ] && [ "$1" != 'tsv' ] && [ "$1" != 'labels' ] && [ "$1" != 'yoctogi' ] ; then
-	echo "TODO: help message"
-	exit
+if [ "$1" != 'all' ] && [ "$1" != 'freeze' ] && [ "$1" != 'get' ] && [ "$1" != 'dictionaries' ] && [ "$1" != 'ner' ] && [ "$1" != 'tsv' ] && [ "$1" != 'labels' ] && [ "$1" != 'yoctogi' ] ; then
+	help_message
+	exit 1
 fi
 
 prefix=*
@@ -64,6 +95,20 @@ lowercase=0
 
 if [[ $# -eq 2 ]] ; then
 	prefix=$2
+fi
+
+if [ "$1" = 'all' ] || [ "$1" = 'freeze' ] ; then
+	echo "Freezing current versioning..."
+
+	cd bioknack
+	git show-ref --head > ../BIOKNACK_REF
+	git diff > ../BIOKNACK_DIFF
+	cd ..
+
+	cd opacmo
+	git show-ref --head > ../OPACMO_REF
+	git diff > ../OPACMO_DIFF
+	cd ..
 fi
 
 if [ "$1" = 'all' ] || [ "$1" = 'get' ] ; then

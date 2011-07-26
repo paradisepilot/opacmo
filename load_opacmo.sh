@@ -63,9 +63,11 @@ if [[ "$db" = 'psql' ]] ; then
 	psql -c "CREATE INDEX entrezname_idx ON yoctogi (entrezname)" yoctogi
 	psql -c "CREATE INDEX entrezname_lower_idx ON yoctogi ((lower(entrezname)))" yoctogi
 	psql -c "CREATE INDEX entrezid_idx ON yoctogi (entrezid)" yoctogi
+	psql -c "CREATE INDEX entrezid_lower_idx ON yoctogi ((lower(entrezid)))" yoctogi
 	psql -c "CREATE INDEX speciesname_idx ON yoctogi (speciesname)" yoctogi
 	psql -c "CREATE INDEX speciesname_lower_idx ON yoctogi ((lower(speciesname)))" yoctogi
 	psql -c "CREATE INDEX speciesid_idx ON yoctogi (speciesid)" yoctogi
+	psql -c "CREATE INDEX speciesid_lower_idx ON yoctogi ((lower(speciesid)))" yoctogi
 	psql -c "CREATE INDEX oboname_idx ON yoctogi (oboname)" yoctogi
 	psql -c "CREATE INDEX oboname_lower_idx ON yoctogi ((lower(oboname)))" yoctogi
 	psql -c "CREATE INDEX oboid_idx ON yoctogi (oboid)" yoctogi
