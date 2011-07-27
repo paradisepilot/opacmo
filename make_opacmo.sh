@@ -137,6 +137,10 @@ if [ "$1" = 'all' ] || [ "$1" = 'ner' ] ; then
 		bk_ner_gn.sh ner
 		bk_ner_gn.sh score
 
+		if [ ! -f genes.tsv ] ; then touch genes.tsv ; fi
+		if [ ! -f species.tsv ] ; then touch species.tsv ; fi
+		if [ ! -f terms.tsv ] ; then touch terms.tsv ; fi
+
 		journal_name=`basename "$journal_dir"`
 		cp genes.tsv "opacmo_data/${journal_name}__genes.tsv"
 		cp species.tsv "opacmo_data/${journal_name}__species.tsv"
