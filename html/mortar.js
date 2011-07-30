@@ -8,6 +8,8 @@
  *
  */
 
+var updateInProgress = false;
+
 var showHelpMessages = true;
 var showHelpMessagesElement = new Element('div#helpmessages', { 'class': 'optionsswitch' });
 var aboutSlider = null;
@@ -15,9 +17,23 @@ var aboutSwitch = new Element('div#aboutswitch');
 var caseSwitch = false;
 var caseSwitchElement = new Element('div#caseswitch', { 'class': 'optionsswitch' });
 var helperSliders = {};
+var noResultsMessage = new Element('span', { 'class': 'noresultsfound', 'html': 'No results found.' });
+
+var browseMessage = new Element('span', { 'class': 'browsetext', 'html': '' });
+var browseLeft = new Element('img', { 'class': 'browsebutton', 'src': '/images/gray_dark/arrow_left_12x12.png' });
+var browseRight = new Element('img', { 'class': 'browsebutton', 'src': '/images/gray_dark/arrow_right_12x12.png' });
+var browseOffset = 0;
+var yoctogiAggregateLimit = 25;
+
+var sortedMessage = new Element('span', { 'class': 'sortedtext', 'html': 'Sorted by score of: ' });
+var sortedByEntrez = new Element('a', { 'class': 'sortedbutton', 'html': 'Entrez Genes' });
+var sortedBySpecies = new Element('a', { 'class': 'sortedbutton', 'html': 'Species' });
+var sortedByOBO = new Element('a', { 'class': 'sortedbutton', 'html': 'OBO Terms' });
+var sortedSelected = 'entrezscore';
 
 var queryOverText = null;
 var suggestionSpinner = null;
+var resultSpinner = null;
 
 var workaroundHtmlTable = null;
 var workaroundHtmlTableRow = null;
@@ -55,7 +71,7 @@ var header2ResultHeader = {
 };
 
 var suggestionRequest = new Request.JSON({
-		url: 'http://opacmo.org/yoctogi.fcgi',
+		url: 'http://www.opacmo.org/yoctogi.fcgi',
 		link: 'cancel',
 		onSuccess: function(response) {
 			suggestionSpinner.hide();
@@ -84,9 +100,11 @@ var suggestionRequest = new Request.JSON({
 	});
 
 var resultRequest = new Request.JSON({
-		url: 'http://opacmo.org/yoctogi.fcgi',
+		url: 'http://www.opacmo.org/yoctogi.fcgi',
 		link: 'cancel',
 		onSuccess: function(response) {
+			resultSpinner.hide();
+
 			if (response.error) {
 				// TODO
 				alert(response);
@@ -97,7 +115,7 @@ var resultRequest = new Request.JSON({
 				var type = response.download.replace(/^[^.]+\./, '')
 				var link = new Element('a#downloadlink' + type, {
 					'class': 'downloadlink',
-					'href': 'http://opacmo.org/' + response.download,
+					'href': 'http://www.opacmo.org/' + response.download,
 					'html': '&nbsp;Download Link&nbsp;',
 					'target': '_blank'
 				});
@@ -107,10 +125,34 @@ var resultRequest = new Request.JSON({
 				return;
 			}
 
+			$('resultdownloads').empty();
+			$('resultbrowse').empty();
 			$('resultcontainer').empty();
 
 			makeDownload('tsv');
 			makeDownload('xls');
+
+			if (response.count > 0) {
+				var pmcidsReturned = 0;
+				browseMax = response.count;
+
+				for (var pmcid in response.result)
+					pmcidsReturned++;
+
+				browseMessage.set('html', 'Showing results ' + (browseOffset + 1) + ' to ' + (browseOffset + pmcidsReturned) + ' of ' + browseMax + ' total');
+				browseMessage.inject($('resultbrowse'));
+				browseLeft.inject($('resultbrowse'));
+				browseRight.inject($('resultbrowse'));
+
+				sortedMessage.inject($('resultbrowse'));
+				sortedByEntrez.inject($('resultbrowse'));
+				sortedBySpecies.inject($('resultbrowse'));
+				sortedByOBO.inject($('resultbrowse'));
+
+				updateSortedButtons();
+			}
+
+			var continuousNumber = browseOffset + 1;
 
 			for (var pmcid in response.result) {
 				var pmcInfo = new Element('div#pmc' + pmcid, {
@@ -135,6 +177,8 @@ var resultRequest = new Request.JSON({
 						continue;
 
 					if (batch.selection[0] == 'titles') {
+						new Element('span', { 'html': '' + (continuousNumber++) + '.&nbsp;' }).inject(title);
+
 						var clazz = 'resulttitle';
 						if (selectedEntities['PMC ID%' + batch.result[0][0]])
 							clazz = 'resulttitle-selected';
@@ -145,10 +189,8 @@ var resultRequest = new Request.JSON({
 							'target': '_blank'
 						});
 
-						entity.set('html', batch.result[0][0] + '&nbsp;&mdash;&nbsp;' + batch.result[0][2]);
+						entity.set('html', batch.result[0][0] + '&nbsp;&mdash;&nbsp;' + batch.result[0][1]);
 						entity.inject(title);
-
-						//title.set('html', batch.result[0][2]);
 					} else if (batch.selection[0] == 'entrezname') {
 						for (var row = 0; row < batch.result.length; row++)
 							makeRow('Genes:', 'resultlink', row, genes, batch.result[row][0], batch.result[row][1], batch.result[row][2], 'http://www.ncbi.nlm.nih.gov/gene/' + batch.result[row][1]);
@@ -170,6 +212,9 @@ var resultRequest = new Request.JSON({
 				terms.inject(pmcInfo);
 				pmcInfo.inject($('resultcontainer'));
 			}
+
+			if (response.count == 0)
+				noResultsMessage.inject($('resultcontainer'));
 		}
 	});
 
@@ -196,6 +241,7 @@ function makeRow(header, clazz, row, container, name, id, score, linkOut) {
 	if (selectedEntities[header + '%' + name] || selectedEntities[header + '%' + id])
 		clazz = clazz + '-selected';
 
+	score = parseInt(score);
 	clipped_score = score < 5 ? 5 : score;
 	clipped_score = score > 15 ? 15 : clipped_score;
 
@@ -242,15 +288,6 @@ function clearSuggestions() {
 			delete suggestionTables[suggestions[i].id];
 			delete suggestionColumns[suggestions[i].id];
 			suggestions[i].dispose();
-		} else if ($('c' + suggestions[i].id).getOpacity() == 0) {
-			// Highlight those suggestions that were selected.
-			new Fx.Morph($('c' + suggestions[i].id), { duration: 'short' }).start({
-				opacity: [ 0, 1 ]
-			});
-			suggestionTables[suggestions[i].id].disableSelect();
-			suggestions[i].getChildren()[1].morph({
-				'color': '#999999'
-			});
 		}
 	}
 }
@@ -300,7 +337,7 @@ function makeTable(container, matrix, headers, result) {
 
 	var closeButton = new Element('img#c' + id, {
 		'class': 'closebutton',
-		src: '/images/gray_light/x_alt_12x12.png'
+		'src': '/images/gray_light/x_alt_12x12.png'
 	});
 	closeButton.addEvent('click', function() {
 		if ($('c' + id).getOpacity() != 1)
@@ -310,6 +347,7 @@ function makeTable(container, matrix, headers, result) {
 
 		fadeOut.addEvent('complete', function() {
 			$(id).dispose();
+			browseOffset = 0;
 			runConjunctiveQuery();
 		});
 
@@ -323,7 +361,6 @@ function makeTable(container, matrix, headers, result) {
 	closeButton.addEvent('mouseleave', function() {
 		closeButton.setProperty('src', '/images/gray_light/x_alt_12x12.png');
 	});
-	closeButton.setOpacity(0);
 
 	var htmlTable = new HtmlTable(options);
 
@@ -334,6 +371,7 @@ function makeTable(container, matrix, headers, result) {
 		workaroundHtmlTable = null;
 
 		$('query').value = '';
+		browseOffset = 0;
 		runConjunctiveQuery();
 
 		if (showHelpMessages)
@@ -344,6 +382,7 @@ function makeTable(container, matrix, headers, result) {
 		workaroundHtmlTable = htmlTable;
 		workaroundHtmlTableRow = row;
 
+		browseOffset = 0;
 		runConjunctiveQuery();
 	});
 
@@ -361,7 +400,7 @@ function makeTable(container, matrix, headers, result) {
 function processQuery() {
 	var query = $('query').value;
 
-	if (!query || query.length == 0)
+	if (!query || query.length < 2)
 		return;
 
 	query = query.replace(/^ +/, '')
@@ -393,6 +432,10 @@ function processQuery() {
 
 	var yoctogiRequest = { clauses: yoctogiClauses, options: yoctogiOptions  }
 
+	if ($('secondstage').getOpacity() == 0) {
+		new Fx.Morph($('secondstage'), { duration: 'short' }).start({ opacity: [ 0, 1 ] });
+	}
+
 	suggestionSpinner.show();
 	suggestionRequest.send(JSON.encode(yoctogiRequest));
 }
@@ -423,13 +466,52 @@ function runConjunctiveQuery(format) {
 		}
 	}
 
+	if (!format) {
+		$('resultdownloads').empty();
+		$('resultbrowse').empty();
+		$('resultcontainer').empty();
+
+		if (yoctogiClauses['entrezname'] || yoctogiClauses['entrezid']) {
+			sortedByEntrez.set('style', 'display: inline;');
+			sortedSelected = 'entrezscore';
+		} else
+			sortedByEntrez.set('style', 'display: none;');
+		if (yoctogiClauses['speciesname'] || yoctogiClauses['speciesid']) {
+			sortedBySpecies.set('style', 'display: inline;');
+			sortedSelected = 'speciesscore';
+		} else
+			sortedBySpecies.set('style', 'display: none;');
+		if (yoctogiClauses['oboname'] || yoctogiClauses['oboid']) {
+			sortedByOBO.set('style', 'display: inline;');
+			sortedSelected = 'oboscore';
+		} else
+			sortedByOBO.set('style', 'display: none;');
+	}
+
 	if (yoctogiClausesLength == 0)
 		return;
 
-	var yoctogiOptions = { distinct: true, notempty: 0, orderby: 2, orderdescending: true }
+	if (!format) {
+		if ($('thirdstage').getOpacity() == 0) {
+			new Fx.Morph($('thirdstage'), { duration: 'short' }).start({ opacity: [ 0, 1 ] });
+		}
+	}
+
+	resultSpinner.show();
+
+	var yoctogiOptions = {
+		distinct: true,
+		notempty: 0,
+		orderby: 2,
+		orderdescending: true,
+		count: true,
+		offset: browseOffset,
+		aggregateorder: [ sortedSelected ],
+		aggregateorderdescending: true
+	};
 
 	if (format)
-		yoctogiOptions['format'] = format
+		yoctogiOptions['format'] = format;
 
 	var yoctogiRequest = {
 		aggregate: {
@@ -442,9 +524,22 @@ function runConjunctiveQuery(format) {
 		clauses: yoctogiClauses,
 		dimensions: { titles: 'pmcid' },
 		options: yoctogiOptions
-	}
+	};
 
 	resultRequest.send(JSON.encode(yoctogiRequest));
+}
+
+function updateSortedButtons() {
+	sortedByEntrez.set('class', 'sortedbutton');
+	sortedBySpecies.set('class', 'sortedbutton');
+	sortedByOBO.set('class', 'sortedbutton');
+
+	if (sortedSelected == 'entrezscore')
+		sortedByEntrez.set('class', 'sortedbutton-selected');
+	else if (sortedSelected == 'speciesscore')
+		sortedBySpecies.set('class', 'sortedbutton-selected');
+	else if (sortedSelected == 'oboscore')
+		sortedByOBO.set('class', 'sortedbutton-selected');
 }
 
 function updateHelpMessagesSwitch() {
@@ -462,6 +557,9 @@ function updateCaseSwitch() {
 }
 
 $(window).onload = function() {
+	$('secondstage').setOpacity('0');
+	$('thirdstage').setOpacity('0');
+
 	aboutSwitch.inject($('header'));
 	aboutSlider = new Fx.Slide('about', { mode: 'vertical', duration: 'short' }).hide();
 	aboutSlider.addEvent('complete', function() {
@@ -504,9 +602,21 @@ $(window).onload = function() {
 	});
 	updateCaseSwitch();
 
-	helperSliders['help0'] = new Fx.Slide('help0', { mode: 'horizontal' }).hide().toggle();
+	helperSliders['help0'] = new Fx.Slide('help0', { mode: 'horizontal' }).hide();
 	helperSliders['help1'] = new Fx.Slide('help1', { mode: 'horizontal' }).hide();
 	helperSliders['help2'] = new Fx.Slide('help2', { mode: 'horizontal' }).hide();
+
+	if (updateInProgress) {
+		$('query').disabled = true;
+
+		new Element('div', {
+			'class': 'notificationimportant',
+			html: 'The database is currently being updated. Please check back later.'
+		}).inject($('notifications'));
+
+		$('query').alt = '--- disabled due to update ---';
+	} else
+		helperSliders['help0'].toggle();
 
 	$('query').addEvent('keyup', function() {
 		clearTimeout(processQueryTimeOutID);
@@ -515,5 +625,39 @@ $(window).onload = function() {
 	queryOverText = new OverText($('query'));
 
 	suggestionSpinner = new Spinner('suggestioncontainer');
+	resultSpinner = new Spinner('resultcontainer');
+
+	browseLeft.addEvent('click', function() {
+		if (browseOffset - yoctogiAggregateLimit >= 0)
+			browseOffset -= yoctogiAggregateLimit;
+		runConjunctiveQuery();
+	});
+	browseRight.addEvent('click', function() {
+		if (browseOffset + yoctogiAggregateLimit < browseMax)
+			browseOffset += yoctogiAggregateLimit;
+		runConjunctiveQuery();
+	});
+
+	sortedByEntrez.addEvent('click', function() {
+		if (sortedSelected == 'entrezscore')
+			return;
+		sortedSelected = 'entrezscore';
+		updateSortedButtons();
+		runConjunctiveQuery();
+	});
+	sortedBySpecies.addEvent('click', function() {
+		if (sortedSelected == 'speciesscore')
+			return;
+		sortedSelected = 'speciesscore';
+		updateSortedButtons();
+		runConjunctiveQuery();
+	});
+	sortedByOBO.addEvent('click', function() {
+		if (sortedSelected == 'oboscore')
+			return;
+		sortedSelected = 'oboscore';
+		updateSortedButtons();
+		runConjunctiveQuery();
+	});
 }
 

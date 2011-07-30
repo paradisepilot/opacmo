@@ -15,5 +15,7 @@
 	background: url(images/spinner/ajax-loader.gif) no-repeat;
 	width: 66px;
 	height: 66px;
-	margin: 0 auto;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 30px;
 }

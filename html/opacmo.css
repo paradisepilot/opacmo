@@ -35,6 +35,12 @@ a:hover {
 	color: #888888;
 }
 
+.noresultsfound {
+	font-size: 12pt;
+	font-style: italic;
+	color: #555555;
+}
+
 .titlecontainer {
 	font-size: 12pt;
 	font-weight: bold;
@@ -171,18 +177,11 @@ a:hover {
 	display: block;
 	margin-left: auto;
 	margin-right: auto;
-	padding-left: 30px;
-	padding-right: 30px;
-	padding-top: 2pt;
-	padding-bottom: 2pt;
-	background-color: #666666;
-	border-radius: 3pt;
-	-moz-border-radius: 3pt;
 	cursor: pointer;
 }
 
-.closebutton:hover {
-	background-color: #664444;
+.browsebutton {
+	margin-left: 7px;
 }
 
 #logo {
@@ -308,7 +307,7 @@ a:hover {
 	width: 100%;
 	overflow: hidden;
 	vertical-align: top;
-	height: 210pt;
+	-x-height: 210pt;
 }
 
 .stageresults {
@@ -316,14 +315,14 @@ a:hover {
 	width: 100%;
 	overflow: hidden;
 	vertical-align: top;
-	height: 210pt;
+	-x-height: 210pt;
 }
 
 #suggestioncontainer {
 	display: block;
 	float: left;
 	width: 100%;
-	min-height: 180pt;
+	-x-min-height: 180pt;
 }
 
 #resultcontainer {
@@ -339,9 +338,56 @@ a:hover {
 	width: 100%;
 }
 
+#resultbrowse {
+	display: block;
+	float: left;
+	width: 100%;
+}
+
+.browsetext {
+	font-family: helvetica;
+	font-size: 12pt;
+	font-style: italic;
+}
+
+.sortedtext {
+	font-family: helvetica;
+	font-size: 12pt;
+	font-style: italic;
+	margin-left: 20px;
+}
+
+.sortedbutton {
+	font-family: helvetica;
+	font-size: 12pt;
+	font-style: italic;
+	margin-left: 10pt;
+}
+
+.sortedbutton:hover {
+	color: #00709b;
+}
+
+.sortedbutton-selected {
+	font-family: helvetica;
+	font-size: 12pt;
+	font-style: italic;
+	margin-left: 10pt;
+	color: #8bcc00;
+}
+
 .suggestiontable {
 	float: left;
 	width: '33%';
+}
+
+.notificationimportant {
+	display: block;
+	font-family: helvetica;
+	font-size: 16pt;
+	text-align: center;
+	color: #ff4444;
+	margin-bottom: 12pt;
 }
 
 table {
