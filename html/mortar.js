@@ -471,21 +471,25 @@ function runConjunctiveQuery(format) {
 		$('resultbrowse').empty();
 		$('resultcontainer').empty();
 
+		nextSortedSelected = [];
 		if (yoctogiClauses['entrezname'] || yoctogiClauses['entrezid']) {
 			sortedByEntrez.set('style', 'display: inline;');
-			sortedSelected = 'entrezscore';
+			nextSortedSelected.push('entrezscore');
 		} else
 			sortedByEntrez.set('style', 'display: none;');
 		if (yoctogiClauses['speciesname'] || yoctogiClauses['speciesid']) {
 			sortedBySpecies.set('style', 'display: inline;');
-			sortedSelected = 'speciesscore';
+			nextSortedSelected.push('speciesscore');
 		} else
 			sortedBySpecies.set('style', 'display: none;');
 		if (yoctogiClauses['oboname'] || yoctogiClauses['oboid']) {
 			sortedByOBO.set('style', 'display: inline;');
-			sortedSelected = 'oboscore';
+			nextSortedSelected.push('oboscore');
 		} else
 			sortedByOBO.set('style', 'display: none;');
+
+		if (nextSortedSelected.indexOf(sortedSelected) < 0 && nextSortedSelected.length > 0)
+			sortedSelected = nextSortedSelected[0];
 	}
 
 	if (yoctogiClausesLength == 0)
