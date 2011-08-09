@@ -74,7 +74,7 @@ check_dir 'bioknack'
 
 if [[ $# -lt 1 ]] || [[ $# -gt 2 ]] ; then
 	help_message
-	exit
+	exit 1
 fi
 
 if [ "$1" != 'all' ] && [ "$1" != 'freeze' ] && [ "$1" != 'get' ] && [ "$1" != 'dictionaries' ] && [ "$1" != 'ner' ] && [ "$1" != 'tsv' ] && [ "$1" != 'labels' ] && [ "$1" != 'yoctogi' ] ; then
