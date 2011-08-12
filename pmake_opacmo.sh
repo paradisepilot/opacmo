@@ -36,7 +36,7 @@ for journal in input/* ; do
 	rm -rf $forkdir
 	mkdir $forkdir
 	cd $forkdir
-	mkdir input ; cd input ; ln -s $journal ; cd ..
+	mkdir input ; cd input ; ln -s ../../$journal ; cd ..
 	ln -s ../dictionaries
 	mkdir tmp ; cd tmp ; ln -s ../../tmp/* . ; cd ..
 	ln -s ../bioknack
@@ -44,7 +44,7 @@ for journal in input/* ; do
 	mkdir opacmo_data
 
 	echo "Processing in background: $journal"
-	make_opacmo.sh $cmd $journal &
+	make_opacmo.sh $cmd `basename $journal` &> FORK.LOG &
 	sleep 1
 
 	cd ..
@@ -53,7 +53,7 @@ for journal in input/* ; do
 done
 
 scheduler
-while [[ $? -neq 0 ]] ; do
+while [[ $? -ne 0 ]] ; do
 	sleep 5
 	scheduler
 done
