@@ -60,6 +60,7 @@ help_message() {
 	echo "  get          : download gene and species databases, ontologies and PMC archive"
 	echo "  dictionaries : create dictionaries for bioknack's named entity recognition"
 	echo "  ner          : run bioknack's named entity recognition ('prefix' applicable)"
+	echo "  pner         : run bioknack's named entity recognition parallelized"
 	echo "  tsv          : filter and join NER output into TSV files"
 	echo "  labels       : create TSV files that map identifiers to readable names"
 	echo "  yoctogi      : create denormalized TSV files for loading into Yoctogi"
@@ -77,7 +78,7 @@ if [[ $# -lt 1 ]] || [[ $# -gt 2 ]] ; then
 	exit 1
 fi
 
-if [ "$1" != 'all' ] && [ "$1" != 'freeze' ] && [ "$1" != 'get' ] && [ "$1" != 'dictionaries' ] && [ "$1" != 'ner' ] && [ "$1" != 'tsv' ] && [ "$1" != 'labels' ] && [ "$1" != 'yoctogi' ] ; then
+if [ "$1" != 'all' ] && [ "$1" != 'freeze' ] && [ "$1" != 'get' ] && [ "$1" != 'dictionaries' ] && [ "$1" != 'ner' ] && [ "$1" != 'pner' ] && [ "$1" != 'tsv' ] && [ "$1" != 'labels' ] && [ "$1" != 'yoctogi' ] ; then
 	help_message
 	exit 1
 fi
@@ -124,30 +125,36 @@ if [ "$1" = 'all' ] || [ "$1" = 'dictionaries' ] ; then
 	bk_ner_gn.sh species
 fi
 
-if [ "$1" = 'all' ] || [ "$1" = 'ner' ] ; then
-	if [ ! -d opacmo_data ] ; then mkdir opacmo_data ; fi
+if [ "$1" = 'all' ] || [ "$1" = 'ner' ] || [ "$1" = 'pner' ] ; then
+	if [ "$1" = 'ner' ] ; then
+		touch STATE_NER
+		if [ ! -d opacmo_data ] ; then mkdir opacmo_data ; fi
 
-	for journal_dir in input/$prefix ; do
+		for journal_dir in input/$prefix ; do
 
-		if [ ! -d "$journal_dir" ] ; then continue ; fi
+			if [ ! -d "$journal_dir" ] ; then continue ; fi
 
-		echo "$journal_dir"
-		bk_ner_symlink_dir.sh "$journal_dir"
-		bk_ner_gn.sh corpus
-		bk_ner_gn.sh ner
-		bk_ner_gn.sh score
+			echo "$journal_dir"
+			bk_ner_symlink_dir.sh "$journal_dir"
+			bk_ner_gn.sh corpus
+			bk_ner_gn.sh ner
+			bk_ner_gn.sh score
 
-		if [ ! -f genes.tsv ] ; then touch genes.tsv ; fi
-		if [ ! -f species.tsv ] ; then touch species.tsv ; fi
-		if [ ! -f terms.tsv ] ; then touch terms.tsv ; fi
+			if [ ! -f genes.tsv ] ; then touch genes.tsv ; fi
+			if [ ! -f species.tsv ] ; then touch species.tsv ; fi
+			if [ ! -f terms.tsv ] ; then touch terms.tsv ; fi
 
-		journal_name=`basename "$journal_dir"`
-		cp genes.tsv "opacmo_data/${journal_name}__genes.tsv"
-		cp species.tsv "opacmo_data/${journal_name}__species.tsv"
-		cp terms.tsv "opacmo_data/${journal_name}__terms.tsv"
+			journal_name=`basename "$journal_dir"`
+			cp genes.tsv "opacmo_data/${journal_name}__genes.tsv"
+			cp species.tsv "opacmo_data/${journal_name}__species.tsv"
+			cp terms.tsv "opacmo_data/${journal_name}__terms.tsv"
 
-		rm -f genes.tsv species.tsv terms.tsv
-	done
+			rm -f genes.tsv species.tsv terms.tsv
+		done
+		rm -f STATE_NER
+	else
+		pmake_opacmo.sh
+	fi
 fi
 
 if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] ; then
