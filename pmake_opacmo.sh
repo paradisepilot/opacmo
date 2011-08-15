@@ -41,7 +41,7 @@ for journal in input/* ; do
 	mkdir tmp ; cd tmp ; ln -s ../../tmp/* . ; cd ..
 	ln -s ../bioknack
 	ln -s ../opacmo
-	mkdir opacmo_data
+	ln -s ../opacmo_data
 
 	echo "Processing in background: $journal"
 	make_opacmo.sh $cmd `basename $journal` &> FORK.LOG &

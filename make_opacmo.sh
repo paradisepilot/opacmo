@@ -99,6 +99,7 @@ if [[ $# -eq 2 ]] ; then
 fi
 
 if [ "$1" = 'all' ] || [ "$1" = 'freeze' ] ; then
+	touch STATE_FREEZE
 	echo "Freezing current versioning..."
 
 	cd bioknack
@@ -110,19 +111,24 @@ if [ "$1" = 'all' ] || [ "$1" = 'freeze' ] ; then
 	git show-ref --head > ../OPACMO_REF
 	git diff > ../OPACMO_DIFF
 	cd ..
+	rm -f STATE_FREEZE
 fi
 
 if [ "$1" = 'all' ] || [ "$1" = 'get' ] ; then
+	touch STATE_GET
 	date > DATA_INFO
 	mkdir input dictionaries tmp
 	bk_ner_gn.sh minimal
 	bk_ner_gn.sh obo
 	bk_ner_gn.sh pmc
+	rm -f STATE_GET
 fi
 
 if [ "$1" = 'all' ] || [ "$1" = 'dictionaries' ] ; then
+	touch STATE_DICTIONARIES
 	bk_ner_gn.sh genes
 	bk_ner_gn.sh species
+	rm -f STATE_DICTIONARIES
 fi
 
 if [ "$1" = 'all' ] || [ "$1" = 'ner' ] || [ "$1" = 'pner' ] ; then
@@ -153,11 +159,14 @@ if [ "$1" = 'all' ] || [ "$1" = 'ner' ] || [ "$1" = 'pner' ] ; then
 		done
 		rm -f STATE_NER
 	else
+		touch STATE_PNER
 		pmake_opacmo.sh
+		rm -f STATE_PNER
 	fi
 fi
 
 if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] ; then
+	touch STATE_TSV
 	echo "Filtering and joining genes, species and ontology terms..."
 
 	echo " - generating a species white list for filtering species name abbreviations"
@@ -198,14 +207,18 @@ if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] ; then
 	done
 
 	rm -f $data_dir/all_species.tmp $data_dir/whitelist._tmp
+	rm -f STATE_TSV
 fi
 
 if [ "$1" = 'all' ] || [ "$1" = 'labels' ] ; then
+	touch STATE_LABELS
 	echo "Generate labels for gene-, species- and ontology-identifiers..."
 	bk_ner_fmt_labels.sh
+	rm -f STATE_LABELS
 fi
 
 if [ "$1" = 'all' ] || [ "$1" = 'yoctogi' ] ; then
+	touch STATE_YOCTOGI
 	echo "Adding human readable titles, names and terms..."
 
 	# Extract species names and remove genus entities:
@@ -292,5 +305,6 @@ if [ "$1" = 'all' ] || [ "$1" = 'yoctogi' ] ; then
 	fi
 
 	rm -f $data_dir/species_names.tmp
+	rm -f STATE_YOCTOGI
 fi
 
