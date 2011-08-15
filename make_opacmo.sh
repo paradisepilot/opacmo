@@ -160,6 +160,7 @@ if [ "$1" = 'all' ] || [ "$1" = 'ner' ] || [ "$1" = 'pner' ] ; then
 		rm -f STATE_NER
 	else
 		touch STATE_PNER
+		if [ ! -d opacmo_data ] ; then mkdir opacmo_data ; fi
 		pmake_opacmo.sh
 		rm -f STATE_PNER
 	fi
