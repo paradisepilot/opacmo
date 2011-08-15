@@ -44,7 +44,7 @@ for journal in input/* ; do
 	ln -s ../opacmo_data
 
 	echo "Processing in background: $journal"
-	make_opacmo.sh $cmd `basename $journal` &> FORK.LOG &
+	make_opacmo.sh $cmd `basename $journal` &> FORK_LOG &
 	sleep 1
 
 	cd ..
