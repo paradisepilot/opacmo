@@ -2,7 +2,29 @@
 
 db='psql'
 
+touch opacmo_data/WRITE_TEST
+if [[ $? -ne 0 ]] ; then
+	echo "No write permissions to 'opacmo_data'. Please"
+	echo "set the rights so that the 'postgres' user can"
+	echo "read/write to the directory."
+	exit 1
+fi
+rm -f opacmo_data/WRITE_TEST
+
 if [[ "$db" = 'psql' ]] ; then
+	database_check=`psql -c '\dt' yoctogi`
+
+	if [[ $? -ne 0 ]] ; then
+		psql -c "CREATE DATABASE yoctogi" postgres &> /dev/null
+
+		if [[ $? -ne 0 ]] ; then
+			echo "Could not create the 'yoctogi' database."
+			echo "Do you have the right permissions? Are you sure"
+			echo "you are running this script as the 'postgres' user?"
+			exit 1
+		fi
+	fi
+
 	tables_in_yoctogi=`psql -c '\dp' yoctogi | tail -n 2 | tr -d '\n' | grep -o -E '[0-9]+'`
 
 	if [[ $tables_in_yoctogi -gt 0 ]] ; then
@@ -10,7 +32,7 @@ if [[ "$db" = 'psql' ]] ; then
 		echo ""
 		echo "Make sure you know what you are doing and remove this"
 		echo "test from the script. Don't come crying afterwards though."
-		exit
+		exit 1
 	fi
 
 	psql -c "CREATE TABLE yoctogi (pmcid VARCHAR(24), entrezname VARCHAR(512), entrezid VARCHAR(24), entrezscore INTEGER, speciesname VARCHAR(512), speciesid VARCHAR(24), speciesscore INTEGER, oboname VARCHAR(512), oboid VARCHAR(24), oboscore INTEGER)" yoctogi
