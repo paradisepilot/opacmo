@@ -208,7 +208,7 @@ a:hover {
 }
 
 #options {
-	background-color: #5E5150;
+	background-color: #50515E;
 	font-family: courier;
 	border-radius: 11pt;
 	-moz-border-radius: 11pt;
@@ -282,7 +282,7 @@ a:hover {
 
 .stage {
 	display: table-cell;
-	color: #5E5150;
+	color: #50515E;
 	float: left;
 	font-family: courier;
 	letter-spacing: -20pt;
@@ -336,6 +336,7 @@ a:hover {
 	display: block;
 	float: left;
 	width: 100%;
+	margin-bottom: 5px;
 }
 
 #resultbrowse {

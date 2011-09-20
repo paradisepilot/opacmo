@@ -176,7 +176,7 @@ var resultRequest = new Request.JSON({
 					if (!batch.selection)
 						continue;
 
-					if (batch.selection[0] == 'titles') {
+					if (batch.selection[0] == 'pmcid') {
 						new Element('span', { 'html': '' + (continuousNumber++) + '.&nbsp;' }).inject(title);
 
 						var clazz = 'resulttitle';
@@ -316,7 +316,6 @@ function makeTable(container, matrix, headers, result) {
 		if (headers[0] == 'titles')
 			headers = [
 				column2Header['pmcid'],
-				column2Header['pmcid'],
 				column2Header['titles']
 			];
 		else
@@ -326,6 +325,8 @@ function makeTable(container, matrix, headers, result) {
 		options['rows'] = matrix;
 
 	if (headers) {
+		// TODO It is not possible to set multiple constraints on
+		// a single column.
 		if (headers.length == 1 && presentSuggestion(headers[0]))
 			return;
 
@@ -459,7 +460,13 @@ function runConjunctiveQuery(format) {
 
 			for (var j = 0; j < selectedTDs.length; j++) {
 				yoctogiClausesLength++;
-				yoctogiClauses[suggestionColumns[suggestions[i].id]] = selectedTDs[j].innerHTML;
+				var currentAssignment = yoctogiClauses[suggestionColumns[suggestions[i].id]];
+				if (!currentAssignment)
+					yoctogiClauses[suggestionColumns[suggestions[i].id]] = [ selectedTDs[j].innerHTML ];
+				else {
+					currentAssignment.push(selectedTDs[j].innerHTML);
+					yoctogiClauses[suggestionColumns[suggestions[i].id]] = currentAssignment;
+				}
 				selectedEntities[header2ResultHeader[table.head.getChildren()[0].innerHTML] +
 					'%' + selectedTDs[j].innerHTML] = true;;
 			}
@@ -526,7 +533,7 @@ function runConjunctiveQuery(format) {
 			]
 		},
 		clauses: yoctogiClauses,
-		dimensions: { titles: 'pmcid' },
+		dimensions: { titles: { pmcid: [ 'pmctitle' ] } },
 		options: yoctogiOptions
 	};
 
