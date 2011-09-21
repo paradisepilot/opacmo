@@ -14,6 +14,8 @@ var showHelpMessages = true;
 var showHelpMessagesElement = new Element('div#helpmessages', { 'class': 'optionsswitch' });
 var aboutSlider = null;
 var aboutSwitch = new Element('div#aboutswitch');
+var releaseSlider = null;
+var releaseSwitch = new Element('div#releaseswitch');
 var caseSwitch = false;
 var caseSwitchElement = new Element('div#caseswitch', { 'class': 'optionsswitch' });
 var helperSliders = {};
@@ -575,9 +577,9 @@ $(window).onload = function() {
 	aboutSlider = new Fx.Slide('about', { mode: 'vertical', duration: 'short' }).hide();
 	aboutSlider.addEvent('complete', function() {
 		if (aboutSlider.open)
-			$('aboutswitch').innerHTML = 'Hide About';
+			$('aboutswitch').innerHTML = 'Hide&nbsp;';
 		else {
-			$('aboutswitch').innerHTML = 'Show About';
+			$('aboutswitch').innerHTML = 'About';
 			queryOverText.enable();
 		}
 	});
@@ -586,7 +588,24 @@ $(window).onload = function() {
 		queryOverText.disable();
 		aboutSlider.toggle();
 	});
-	$('aboutswitch').innerHTML = 'Show About';
+	$('aboutswitch').innerHTML = 'About';
+
+	releaseSwitch.inject($('header'));
+	releaseSlider = new Fx.Slide('release', { mode: 'vertical', duration: 'short' }).hide();
+	releaseSlider.addEvent('complete', function() {
+		if (releaseSlider.open)
+			$('releaseswitch').innerHTML = 'Hide';
+		else {
+			$('releaseswitch').innerHTML = 'Release Notes &amp; Download';
+			queryOverText.enable();
+		}
+	});
+	releaseSwitch.addEvent('click', function() {
+		$('release').style.visibility = 'visible';
+		queryOverText.disable();
+		releaseSlider.toggle();
+	});
+	$('releaseswitch').innerHTML = 'Release Notes &amp; Download';
 
 	showHelpMessagesElement.inject($('options'));
 	showHelpMessagesElement.addEvent('click', function() {
