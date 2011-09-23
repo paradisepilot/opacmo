@@ -1,12 +1,12 @@
 body {
-	font-family: helvetica;
+	font-family: 'Arimo', helvetica;
 	font-size: 16pt;
 	color: #555555;
 	background-color: #ffffff;
 }
 
 input {
-	font-family: helvetica;
+	font-family: 'Arimo', helvetica;
 	font-size: 16pt;
 	width: 100%;
 }
@@ -98,7 +98,7 @@ a:hover {
 	display: block;
 	color: #333333;
 	background-color: #fefefe;
-	font-family: courier;
+	font-family: 'Numans', courier;
 	font-size: 10pt;
 	float: left;
 	cursor: pointer;
@@ -132,7 +132,7 @@ a:hover {
 	width: 100pt;
 	color: #555555;
 	background-color: #d0d0d0;
-	font-family: courier;
+	font-family: 'Numans', courier;
 	font-size: 10pt;
 	text-align: center;
 	float: right;
@@ -148,7 +148,7 @@ a:hover {
 	width: 100pt;
 	background-color: #ffffff;
 	color: #000000;
-	font-family: courier;
+	font-family: 'Numans', courier;
 	font-size: 10pt;
 	text-align: center;
 	float: right;
@@ -214,7 +214,7 @@ a:hover {
 
 #header {
 	background-color: #d0d0d0;
-	font-family: courier;
+	font-family: 'Numans', courier;
 	border-radius: 11pt;
 	-moz-border-radius: 11pt;
 	height: 22pt;
@@ -225,7 +225,7 @@ a:hover {
 
 #options {
 	background-color: #a0a0a0;
-	font-family: courier;
+	font-family: 'Numans', courier;
 	border-radius: 11pt;
 	-moz-border-radius: 11pt;
 	height: 22pt;
@@ -255,9 +255,10 @@ a:hover {
 }
 
 #aboutswitch:hover {
-	background-color: #8BCC00;
+	color: #00acee;
+	background-color: #bbfc00;
 	border-style: solid;
-	border-color: #6bac00;
+	border-color: #c0c0c0;
 	border-width: 1px;
 	border-radius: 8pt;
 	-moz-border-radius: 8pt;
@@ -284,9 +285,10 @@ a:hover {
 }
 
 #releaseswitch:hover {
-	background-color: #8BCC00;
+	color: #00acee;
+	background-color: #bbfc00;
 	border-style: solid;
-	border-color: #6bac00;
+	border-color: #c0c0c0;
 	border-width: 1px;
 	border-radius: 8pt;
 	-moz-border-radius: 8pt;
@@ -294,7 +296,7 @@ a:hover {
 
 #about {
 	color: #555555;
-	font-family: helvetica;
+	font-family: 'Arimo', helvetica;
 	font-size: 11pt;
 	background-color: #d0d0d0;
 	margin-top: -21pt;
@@ -313,7 +315,7 @@ a:hover {
 
 #release {
 	color: #555555;
-	font-family: helvetica;
+	font-family: 'Arimo', helvetica;
 	font-size: 11pt;
 	background-color: #d0d0d0;
 	margin-top: -21pt;
@@ -328,6 +330,31 @@ a:hover {
 	-moz-border-bottom-left-radius: 20px;
 	-moz-border-bottom-right-radius: 20px;
 	visibility: hidden;
+}
+
+#release h3 {
+	background-color: #8bcc00;
+	padding: 3pt;
+	cursor: pointer;
+	margin-bottom: 0pt;
+}
+
+#release .releasenote {
+	background-color: #f0f0f0;
+	padding-left: 3pt;
+	padding-right: 3pt;
+}
+
+#release table {
+	font-size: 11pt;
+}
+
+#release td {
+	padding: 1pt 9pt;
+}
+
+.tablenumber {
+	text-align: right;
 }
 
 .helpbar {
@@ -360,8 +387,7 @@ a:hover {
 	display: table-cell;
 	color: #50515E;
 	float: left;
-	font-family: courier;
-	letter-spacing: -20pt;
+	font-family: 'Numans', courier;
 	margin-right: 20pt;
 	font-size: 80pt;
 	vertical-align: top;
@@ -422,20 +448,20 @@ a:hover {
 }
 
 .browsetext {
-	font-family: helvetica;
+	font-family: 'Arimo', helvetica;
 	font-size: 12pt;
 	font-style: italic;
 }
 
 .sortedtext {
-	font-family: helvetica;
+	font-family: 'Arimo', helvetica;
 	font-size: 12pt;
 	font-style: italic;
 	margin-left: 20px;
 }
 
 .sortedbutton {
-	font-family: helvetica;
+	font-family: 'Arimo', helvetica;
 	font-size: 12pt;
 	font-style: italic;
 	margin-left: 10pt;
@@ -446,7 +472,7 @@ a:hover {
 }
 
 .sortedbutton-selected {
-	font-family: helvetica;
+	font-family: 'Arimo', helvetica;
 	font-size: 12pt;
 	font-style: italic;
 	margin-left: 10pt;
@@ -460,7 +486,7 @@ a:hover {
 
 .notificationimportant {
 	display: block;
-	font-family: helvetica;
+	font-family: 'Arimo', helvetica;
 	font-size: 16pt;
 	text-align: center;
 	color: #ff4444;
@@ -482,7 +508,7 @@ tr.table-tr-selected {
 }
 
 td.suggestiontable {
-	font-family: helvetica;
+	font-family: 'Arimo', helvetica;
 	font-size: 10pt;
 }
 

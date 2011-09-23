@@ -13,7 +13,7 @@ var updateInProgress = false;
 var showHelpMessages = true;
 var showHelpMessagesElement = new Element('div#helpmessages', { 'class': 'optionsswitch' });
 var aboutSlider = null;
-var aboutSwitch = new Element('div#aboutswitch');
+var aboutSwitch = new Element('div#aboutswitch', { 'class': 'headerbutton' } );
 var releaseSlider = null;
 var releaseSwitch = new Element('div#releaseswitch');
 var caseSwitch = false;
@@ -576,9 +576,10 @@ $(window).onload = function() {
 	aboutSwitch.inject($('header'));
 	aboutSlider = new Fx.Slide('about', { mode: 'vertical', duration: 'short' }).hide();
 	aboutSlider.addEvent('complete', function() {
-		if (aboutSlider.open)
+		if (aboutSlider.open) {
+			releaseSlider.slideOut();
 			$('aboutswitch').innerHTML = 'Hide&nbsp;';
-		else {
+		} else {
 			$('aboutswitch').innerHTML = 'About';
 			queryOverText.enable();
 		}
@@ -593,9 +594,10 @@ $(window).onload = function() {
 	releaseSwitch.inject($('header'));
 	releaseSlider = new Fx.Slide('release', { mode: 'vertical', duration: 'short' }).hide();
 	releaseSlider.addEvent('complete', function() {
-		if (releaseSlider.open)
+		if (releaseSlider.open) {
+			aboutSlider.slideOut();
 			$('releaseswitch').innerHTML = 'Hide';
-		else {
+		} else {
 			$('releaseswitch').innerHTML = 'Release Notes &amp; Download';
 			queryOverText.enable();
 		}
@@ -606,6 +608,8 @@ $(window).onload = function() {
 		releaseSlider.toggle();
 	});
 	$('releaseswitch').innerHTML = 'Release Notes &amp; Download';
+
+	new Fx.Accordion($('release'), '#release h3', '#release .releasenote');
 
 	showHelpMessagesElement.inject($('options'));
 	showHelpMessagesElement.addEvent('click', function() {
