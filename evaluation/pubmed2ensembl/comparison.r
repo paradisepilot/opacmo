@@ -42,6 +42,11 @@ x <- tsv[tsv$Species=='danio+rerio' & tsv$Gene.Symbol=='Myc',]
 x$Gene.Symbol <- 'myca'
 tsv[tsv$Species=='danio+rerio' & tsv$Gene.Symbol=='Myc',] <- x
 
+# The queries to PubMed Central via NCBI's interface are really case
+# insensitive, so we should expose that here as well:
+x <- tsv$Gene.Symbol
+tsv$Gene.Symbol <- tolower(x)
+
 colors = c('#5588bb', '#88aa33')
 
 summary_plot('humans')
