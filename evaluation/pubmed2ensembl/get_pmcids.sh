@@ -144,7 +144,7 @@ for maxdate in {$pubmed2ensembl_date,$opacmo_date} ; do
 				synonym_list='Myc2;Nird;Niard;bHLHe39;AU016757'
 			elif [ "$genename" == "dm" ] ; then
 				# http://www.ncbi.nlm.nih.gov/gene/31310 (2011/10/21)
-				synonym_list='anon-WO03040301\.171;bHLHe57;c-myc;c-Myc;c-MYC;CG10798;d-myc;D-Myc;Dm;dm/dMyc;dm/myc;Dmel\\CG10798;dmyc;dMyc;dMYC;Dmyc;DMYc;dmyc1;dMyc1;EG:BACN5I9\.1;l\(1\)G0139;myc;Myc;MYC'
+				synonym_list='anon-WO03040301\.171;bHLHe57;c-myc;c-Myc;c-MYC;CG10798;d-myc;D-Myc;Dm;dm\/dMyc;dm\/myc;Dmel\\CG10798;dmyc;dMyc;dMYC;Dmyc;DMYc;dmyc1;dMyc1;EG:BACN5I9\.1;l\(1\)G0139;myc;Myc;MYC'
 			elif [ "$genename" == "myca" ] ; then
 				# http://www.ncbi.nlm.nih.gov/gene/30686 (2011/10/21)
 				synonym_list='MYC;cmyc;c-myc;zc-myc'
