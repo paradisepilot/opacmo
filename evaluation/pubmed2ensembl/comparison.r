@@ -14,6 +14,22 @@ summary_plot <- function(species) {
         species_name <- "Danio rerio"
     }
     
+    name <- paste(species, "_tp.png", sep="")
+    title <- paste("True Positives:", species_name, sep=" ")
+    values <- tsv[tsv$Species==species,]$True.Positives
+    png(filename = name, width=650, height=400, units="px", pointsize=10, bg="white")
+    barplot(values, ylim=c(0,max(values)*1.15), names.arg=xlabels,
+              col=colors, main=title, space=0.4)
+    dev.off()
+    
+    name <- paste(species, "_fp.png", sep="")
+    title <- paste("False Positives:", species_name, sep=" ")
+    values <- tsv[tsv$Species==species,]$False.Positives
+    png(filename = name, width=650, height=400, units="px", pointsize=10, bg="white")
+    barplot(values, ylim=c(0,max(values)*1.15), names.arg=xlabels,
+              col=colors, main=title, space=0.4)
+    dev.off()
+    
     name <- paste(species, "_tpr.png", sep="")
     title <- paste("True Positive Rate:", species_name, sep=" ")
     png(filename = name, width=650, height=400, units="px", pointsize=10, bg="white")
