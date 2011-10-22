@@ -27,7 +27,7 @@ var browseRight = new Element('img', { 'class': 'browsebutton', 'src': '/images/
 var browseOffset = 0;
 var yoctogiAggregateLimit = 25;
 
-var sortedMessage = new Element('span', { 'class': 'sortedtext', 'html': 'Sorted by score of: ' });
+var sortedMessage = new Element('span', { 'class': 'sortedtext', 'html': '<br />Sorted by score of: ' });
 var sortedByEntrez = new Element('a', { 'class': 'sortedbutton', 'html': 'Entrez Genes' });
 var sortedBySpecies = new Element('a', { 'class': 'sortedbutton', 'html': 'Species' });
 var sortedByOBO = new Element('a', { 'class': 'sortedbutton', 'html': 'OBO Terms' });
@@ -519,6 +519,7 @@ function runConjunctiveQuery(format) {
 		orderdescending: true,
 		count: true,
 		offset: browseOffset,
+		limit: yoctogiAggregateLimit,
 		aggregateorder: [ sortedSelected ],
 		aggregateorderdescending: true
 	};
@@ -598,7 +599,7 @@ $(window).onload = function() {
 			aboutSlider.slideOut();
 			$('releaseswitch').innerHTML = 'Hide';
 		} else {
-			$('releaseswitch').innerHTML = 'Release Notes &amp; Download';
+			$('releaseswitch').innerHTML = 'Release Notes &amp; Downloads';
 			queryOverText.enable();
 		}
 	});
@@ -607,7 +608,7 @@ $(window).onload = function() {
 		queryOverText.disable();
 		releaseSlider.toggle();
 	});
-	$('releaseswitch').innerHTML = 'Release Notes &amp; Download';
+	$('releaseswitch').innerHTML = 'Release Notes &amp; Downloads';
 
 	new Fx.Accordion($('release'), '#release h3', '#release .releasenote');
 
