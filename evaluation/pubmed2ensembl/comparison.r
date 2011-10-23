@@ -1,5 +1,3 @@
-library(calibrate)
-
 summary_plot <- function(species) {
     xlabels = paste(tsv[tsv$Species==species,]$Gene.Symbol,
                 tsv[tsv$Species==species,]$Service, sep='\n')
