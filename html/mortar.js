@@ -10,14 +10,10 @@
 
 var updateInProgress = false;
 
-var showHelpMessages = true;
-var showHelpMessagesElement = new Element('div#helpmessages', { 'class': 'optionsswitch' });
 var aboutSlider = null;
 var aboutSwitch = new Element('div#aboutswitch', { 'class': 'headerbutton' } );
 var releaseSlider = null;
 var releaseSwitch = new Element('div#releaseswitch');
-var caseSwitch = false;
-var caseSwitchElement = new Element('div#caseswitch', { 'class': 'optionsswitch' });
 var helperSliders = {};
 var noResultsMessage = new Element('span', { 'class': 'noresultsfound', 'html': 'No results found.' });
 
@@ -72,6 +68,11 @@ var header2ResultHeader = {
 		'OBO ID':	'Terms:'
 };
 
+var type2Name = {
+		'tsv':		'TSV',
+		'xls':		'Excel'
+};
+
 var suggestionRequest = new Request.JSON({
 		url: 'http://www.opacmo.org/yoctogi.fcgi',
 		link: 'cancel',
@@ -115,14 +116,17 @@ var resultRequest = new Request.JSON({
 
 			if (response.download) {
 				var type = response.download.replace(/^[^.]+\./, '')
-				var link = new Element('a#downloadlink' + type, {
-					'class': 'downloadlink',
+				var filename = response.download.replace(/^[^\/]+\//, '')
+				var link = new Element('a#downloadfile' + type, {
+					'class': 'downloadfile',
 					'href': 'http://www.opacmo.org/' + response.download,
-					'html': '&nbsp;Download Link&nbsp;',
+					'html': filename,
 					'target': '_blank'
 				});
-				link.inject($('download' + type));
-				new Fx.Slide('downloadlink' + type, { mode: 'vertical', duration: 'short' }).hide().toggle();
+				$('downloadlink').empty();
+				link.inject($('downloadlink'));
+				$('downloadtype').innerHTML = type2Name[type];
+				$('downloaddialog').set('class', 'modal');
 
 				return;
 			}
@@ -222,12 +226,10 @@ var resultRequest = new Request.JSON({
 
 function makeDownload(format) {
 	var downloadButton = new Element('div#download' + format, {
-		'class': 'downloadbutton',
+		'class': 'btn primary',
 		'html': format.toUpperCase()
 	});
 	downloadButton.addEvent('click', function() {
-		downloadButton.removeEvents();
-		downloadButton.set('class', 'downloadbutton-selected');
 		runConjunctiveQuery(format);
 	});
 	downloadButton.inject($('resultdownloads'));
@@ -377,7 +379,7 @@ function makeTable(container, matrix, headers, result) {
 		browseOffset = 0;
 		runConjunctiveQuery();
 
-		if (showHelpMessages)
+		if ($('optionHelpMessages').checked)
 			helperSliders['help2'].slideIn();
 
 	});
@@ -409,7 +411,7 @@ function processQuery() {
 	query = query.replace(/^ +/, '')
 	query = query.replace(/ +$/, '')
 
-	if (showHelpMessages) {
+	if ($('optionHelpMessages').checked) {
 		helperSliders['help0'].slideIn();
 		helperSliders['help1'].slideIn();
 	}
@@ -431,7 +433,7 @@ function processQuery() {
 	if (query.toUpperCase().match(/^(D|DO|DO:|DOI:|DOID:|DOID:\d+|G|GO|GO:|GO:\d+)$/))
 		yoctogiClauses['oboid'] = query;
 
-	var yoctogiOptions = { like: true, batch: true, distinct: true, caseinsensitive: !caseSwitch }
+	var yoctogiOptions = { like: true, batch: true, distinct: true, caseinsensitive: !$('optionCaseSensitive').checked }
 
 	var yoctogiRequest = { clauses: yoctogiClauses, options: yoctogiOptions  }
 
@@ -556,86 +558,29 @@ function updateSortedButtons() {
 		sortedByOBO.set('class', 'sortedbutton-selected');
 }
 
-function updateHelpMessagesSwitch() {
-	if (showHelpMessages)
-		$('helpmessages').innerHTML = 'Help Messages: On&nbsp;';
-	else
-		$('helpmessages').innerHTML = 'Help Messages: Off';
-}
-
-function updateCaseSwitch() {
-	if (caseSwitch)
-		$('caseswitch').innerHTML = 'Case Sensitive Search: On&nbsp;';
-	else
-		$('caseswitch').innerHTML = 'Case Sensitive Search: Off';
-}
-
 $(window).onload = function() {
 	$('secondstage').setOpacity('0');
 	$('thirdstage').setOpacity('0');
 
-	aboutSwitch.inject($('header'));
-	aboutSlider = new Fx.Slide('about', { mode: 'vertical', duration: 'short' }).hide();
-	aboutSlider.addEvent('complete', function() {
-		if (aboutSlider.open) {
-			releaseSlider.slideOut();
-			$('aboutswitch').innerHTML = 'Hide&nbsp;';
-		} else {
-			$('aboutswitch').innerHTML = 'About';
-			queryOverText.enable();
-		}
-	});
-	aboutSwitch.addEvent('click', function() {
-		$('about').style.visibility = 'visible';
-		queryOverText.disable();
-		aboutSlider.toggle();
-	});
-	$('aboutswitch').innerHTML = 'About';
+	new Fx.Accordion($('release'), '#release h4', '#release .releasenote');
 
-	releaseSwitch.inject($('header'));
-	releaseSlider = new Fx.Slide('release', { mode: 'vertical', duration: 'short' }).hide();
-	releaseSlider.addEvent('complete', function() {
-		if (releaseSlider.open) {
-			aboutSlider.slideOut();
-			$('releaseswitch').innerHTML = 'Hide';
-		} else {
-			$('releaseswitch').innerHTML = 'Release Notes &amp; Downloads';
-			queryOverText.enable();
-		}
-	});
-	releaseSwitch.addEvent('click', function() {
-		$('release').style.visibility = 'visible';
-		queryOverText.disable();
-		releaseSlider.toggle();
-	});
-	$('releaseswitch').innerHTML = 'Release Notes &amp; Downloads';
-
-	new Fx.Accordion($('release'), '#release h3', '#release .releasenote');
-
-	showHelpMessagesElement.inject($('options'));
-	showHelpMessagesElement.addEvent('click', function() {
-		showHelpMessages = showHelpMessages ? false : true;
-		updateHelpMessagesSwitch();
-
-		if (showHelpMessages) {
+	$('optionHelpMessages').addEvent('click', function() {
+		if ($('optionHelpMessages').checked) {
 			helperSliders['help0'].slideIn();
-			helperSliders['help1'].slideIn();
-			helperSliders['help2'].slideIn();
+			if ($('secondstage').getOpacity() == 1)
+				helperSliders['help1'].slideIn();
+			if ($('thirdstage').getOpacity() == 1)
+				helperSliders['help2'].slideIn();
 		} else {
 			helperSliders['help0'].slideOut();
 			helperSliders['help1'].slideOut();
 			helperSliders['help2'].slideOut();
 		}
 	});
-	updateHelpMessagesSwitch();
 
-	caseSwitchElement.inject($('options'));
-	caseSwitchElement.addEvent('click', function() {
-		caseSwitch = caseSwitch ? false : true;
-		updateCaseSwitch();
+	$('optionCaseSensitive').addEvent('click', function() {
 		processQuery();
 	});
-	updateCaseSwitch();
 
 	helperSliders['help0'] = new Fx.Slide('help0', { mode: 'horizontal' }).hide();
 	helperSliders['help1'] = new Fx.Slide('help1', { mode: 'horizontal' }).hide();

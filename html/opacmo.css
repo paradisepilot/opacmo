@@ -1,13 +1,43 @@
+html {
+	background: transparent;
+	background-image: url(images/black_paper.png);
+	background-repeat: repeat;
+	background-position: 0px 0px;
+}
+
 body {
 	font-family: 'Arimo', helvetica;
 	font-size: 20px;
 	color: #555555;
-	background-color: #ffffff;
+	background: transparent;
 }
 
-input {
+.sidebar label {
+	color: #777777;
+}
+
+.content {
+	padding: 15px;
+	background: #ffffff;
+	box-shadow: inner 0 0 5px #333333;
+	-webkit-box-shadow: inset 0 0 5px #333333;
+	-moz-box-shadow: inset 0 0 5px #333333;
+}
+
+#query {
 	font-family: 'Arimo', helvetica;
 	font-size: 20px;
+	height: 30px;
+	width: 90%;
+}
+
+.overTxtLabel {
+	font-family: 'Arimo', helvetica;
+        font-size: 20px;
+        height: 30px;
+	color: #aaaaaa;
+	font-style: italic;
+	text-align: left;
 	width: 100%;
 }
 
@@ -25,9 +55,8 @@ a:hover {
 
 #adv_yoctogi {
 	position: fixed;
-	right: 5px;
 	bottom: 5px;
-	text-align: right;
+	text-align: left;
 	color: #555555;
 	font-size: 12px;
 }
@@ -137,71 +166,27 @@ a:hover {
 	-moz-border-radius: 11px
 }
 
-.downloadbutton {
-	display: inline;
-	width: 130px;
-	color: #555555;
-	background-color: #d0d0d0;
-	font-family: 'Numans', courier;
-	font-size: 12px;
-	text-align: center;
-	float: right;
+#downloadtsv {
+	margin: 5px;
+}
+
+#downloadxls {
+	margin: 5px;
+}
+
+.downloadfile {
+	text-decoration: underline;
+}
+
+.downloadfile:hover {
 	cursor: pointer;
-	margin-right: 13px;
-	padding: 3px;
-	border-style: solid;
-	border-width: 1px;
-	border-color: #333333;
-	border-radius: 6px;
-	-moz-border-radius: 6px;
-}
-
-.downloadbutton-selected {
-	display: inline;
-	width: 130px;
-	background-color: #ffffff;
-	color: #000000;
-	font-family: 'Numans', courier;
-	font-size: 13px;
-	text-align: center;
-	float: right;
-	cursor: pointer;
-	margin-right: 13px;
-	padding: 4px;
-	border-radius: 6px;
-	-moz-border-radius: 6px;
-}
-
-.downloadbutton-selected:hover {
-	cursor: default;
-}
-
-.downloadbutton:hover {
-	background-color: #a0a0a0;
-	color: #000000;
-	cursor: pointer;
-}
-
-.downloadlink {
-	color: #ffffff;
-	background-color: #8BCC00;
-	margin-top: 7px;
-}
-
-.downloadlink:hover {
-	background-color: #bbfc00;
-	cursor: pointer;
-}
-
-.overTxtLabel {
-	color: #aaaaaa;
-	font-style: italic;
 }
 
 .closebutton {
 	display: block;
 	margin-left: auto;
 	margin-right: auto;
+	margin-bottom: 5px;
 	cursor: pointer;
 }
 
@@ -214,10 +199,15 @@ a:hover {
 }
 
 #logo {
-	float: right;
-	padding-left: 10px;
-	padding-right: 20px;
-	margin-top: -20px;
+	text-align: center;
+	color: #eeeeee;
+	font-family: 'Arimo', helvetica;
+	font-size: 12px;
+	padding: 5px;
+	background: rgba(255, 255, 255, 0.2);
+        box-shadow: inner 0 0 5px #333333;
+        -webkit-box-shadow: inset 0 0 5px #333333;
+        -moz-box-shadow: inset 0 0 5px #333333;
 }
 
 .signatures {
@@ -237,74 +227,7 @@ a:hover {
 }
 
 #options {
-	background-color: #a0a0a0;
 	font-family: 'Numans', courier;
-	border-radius: 15px;
-	-moz-border-radius: 15px;
-	height: 30px;
-	width: 100%;
-	margin-top: 20px;
-	margin-bottom: 26px;
-}
-
-#aboutswitch {
-	color: #333333;
-	background-color: #ffffff;
-	font-size: 12px;
-	float: left;
-	margin-top: 4px;
-	margin-left: 13px;
-	margin-right: 13px;
-	padding-top: 3px;
-	padding-bottom: 3px;
-	padding-left: 8px;
-	padding-right: 8px;
-	cursor: pointer;
-	border-style: solid;
-	border-color: #dddddd;
-	border-width: 1px;
-	border-radius: 11px;
-	-moz-border-radius: 11px;
-}
-
-#aboutswitch:hover {
-	color: #00acee;
-	background-color: #bbfc00;
-	border-style: solid;
-	border-color: #c0c0c0;
-	border-width: 1px;
-	border-radius: 11px;
-	-moz-border-radius: 11px;
-}
-
-#releaseswitch {
-	color: #333333;
-	background-color: #ffffff;
-	font-size: 12px;
-	float: left;
-	margin-top: 4px;
-	margin-left: 13px;
-	margin-right: 13px;
-	padding-top: 3px;
-	padding-bottom: 3px;
-	padding-left: 8px;
-	padding-right: 8px;
-	cursor: pointer;
-	border-style: solid;
-	border-color: #dddddd;
-	border-width: 1px;
-	border-radius: 11px;
-	-moz-border-radius: 11px;
-}
-
-#releaseswitch:hover {
-	color: #00acee;
-	background-color: #bbfc00;
-	border-style: solid;
-	border-color: #c0c0c0;
-	border-width: 1px;
-	border-radius: 11px;
-	-moz-border-radius: 11px;
 }
 
 #about {
@@ -312,18 +235,6 @@ a:hover {
 	font-family: 'Arimo', helvetica;
 	font-size: 13px;
 	background-color: #d0d0d0;
-	margin-top: -29px;
-	margin-bottom: 26px;
-	margin-left: 70px;
-	padding-left: 26px;
-	padding-right: 26px;
-	padding-top: 26px;
-	padding-bottom: 13px;
-	border-bottom-left-radius: 20px;
-	border-bottom-right-radius: 20px;
-	-moz-border-bottom-left-radius: 20px;
-	-moz-border-bottom-right-radius: 20px;
-	visibility: hidden;
 }
 
 #release {
@@ -331,21 +242,9 @@ a:hover {
 	font-family: 'Arimo', helvetica;
 	font-size: 13px;
 	background-color: #d0d0d0;
-	margin-top: -29px;
-	margin-bottom: 26pt;
-	margin-left: 70px;
-	padding-left: 26px;
-	padding-right: 26px;
-	padding-top: 0px;
-	padding-bottom: 13px;
-	border-bottom-left-radius: 20px;
-	border-bottom-right-radius: 20px;
-	-moz-border-bottom-left-radius: 20px;
-	-moz-border-bottom-right-radius: 20px;
-	visibility: hidden;
 }
 
-#release h3 {
+#release h4 {
 	background-color: #8bcc00;
 	padding: 5px;
 	cursor: pointer;
@@ -375,8 +274,8 @@ a:hover {
 	color: #00adee;
 	font-size: 14px;
 	font-style: italic;
-	margin-bottom: 5px;
-	margin-left: 16px;
+	padding-bottom: 25px;
+	Xmargin-left: 16px;
 }
 
 .helpitem {
@@ -404,10 +303,6 @@ a:hover {
 	margin-right: 26px;
 	font-size: 100px;
 	vertical-align: top;
-}
-
-.example {
-	font-size: 16px;
 }
 
 .stageaction {
@@ -495,7 +390,7 @@ a:hover {
 
 .suggestiontable {
 	float: left;
-	width: '33%';
+	margin: 5px;
 }
 
 .notificationimportant {
