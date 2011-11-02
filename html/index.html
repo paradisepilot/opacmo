@@ -15,9 +15,9 @@
 			<div class="fill">
 			<div class="container">
 			<ul>
-			<li class="active"><a href="#">Home</a></li>
-			<li><a onclick="$('about').set('class', 'modal')" href="#">About</a></li>
-			<li><a onclick="$('release').set('class', 'modal')" href="#">Release Notes</a></li>
+			<li id="topbar_home" class="active"><a onclick="topbar_hide_modals()">Home</a></li>
+			<li id="topbar_about"><a onclick="topbar_hide_modals(); topbar_activate('topbar_about'); $('about').set('class', 'modal')">About</a></li>
+			<li id="topbar_release"><a onclick="topbar_hide_modals(); topbar_activate('topbar_release'); $('release').set('class', 'modal')">Release Notes</a></li>
 			</ul>
 			</div>
 			</div>
@@ -86,7 +86,7 @@
 		</div>
 		<div id="about" class="modal hide">
 			<div class="modal-header">
-				<div class="close" onclick="$('about').set('class', 'modal hide')">&times;</div>
+				<div class="close" onclick="topbar_hide_modals()">&times;</div>
 				<h3>About</h3>
 			</div>
 			<div class="modal-body">
@@ -107,7 +107,7 @@
 		</div>
 		<div id="release" class="modal hide">
 			<div class="modal-header">
-				<a href="#" class="close" onclick="$('release').set('class', 'modal hide')">&times;</a>
+				<a class="close" onclick="topbar_hide_modals()">&times;</a>
 				<h3>Release Notes</h3>
 			</div>
 			<div class="modal-body">

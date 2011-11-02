@@ -224,6 +224,20 @@ var resultRequest = new Request.JSON({
 		}
 	});
 
+function topbar_activate(id) {
+	$('topbar_home').erase('class');
+	$('topbar_about').erase('class');
+	$('topbar_release').erase('class');
+
+	$(id).set('class', 'active');
+}
+
+function topbar_hide_modals() {
+	topbar_activate('topbar_home');
+	$('about').set('class', 'modal hide');
+	$('release').set('class', 'modal hide');
+}
+
 function makeDownload(format) {
 	var downloadButton = new Element('div#download' + format, {
 		'class': 'btn primary',
