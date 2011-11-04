@@ -596,9 +596,10 @@ $(window).onload = function() {
 		processQuery();
 	});
 
-	helperSliders['help0'] = new Fx.Slide('help0', { mode: 'horizontal' }).hide();
-	helperSliders['help1'] = new Fx.Slide('help1', { mode: 'horizontal' }).hide();
-	helperSliders['help2'] = new Fx.Slide('help2', { mode: 'horizontal' }).hide();
+	// Okay.. this really needs to become a function..
+	helperSliders['help0'] = new Fx.Slide('help0', { mode: 'vertical' }).hide();
+	helperSliders['help1'] = new Fx.Slide('help1', { mode: 'vertical' }).hide();
+	helperSliders['help2'] = new Fx.Slide('help2', { mode: 'vertical' }).hide();
 
 	if (updateInProgress) {
 		$('query').disabled = true;
@@ -616,7 +617,8 @@ $(window).onload = function() {
 		clearTimeout(processQueryTimeOutID);
 		processQueryTimeOutID = processQuery.delay(250);
 	});
-	queryOverText = new OverText($('query'));
+	// Cannot deal with the vertical slide outs:
+	// queryOverText = new OverText($('query'));
 
 	suggestionSpinner = new Spinner('suggestioncontainer');
 	resultSpinner = new Spinner('resultcontainer');

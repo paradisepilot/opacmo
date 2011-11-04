@@ -38,7 +38,7 @@ body {
 	color: #aaaaaa;
 	font-style: italic;
 	text-align: left;
-	width: 100%;
+	width: 70%;
 }
 
 a {
@@ -275,7 +275,6 @@ a:hover {
 	font-size: 14px;
 	font-style: italic;
 	padding-bottom: 25px;
-	Xmargin-left: 16px;
 }
 
 .helpitem {
