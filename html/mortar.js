@@ -620,8 +620,8 @@ $(window).onload = function() {
 	// Cannot deal with the vertical slide outs:
 	// queryOverText = new OverText($('query'));
 
-	suggestionSpinner = new Spinner('suggestioncontainer');
-	resultSpinner = new Spinner('resultcontainer');
+	suggestionSpinner = new Spinner('suggestionspinner');
+	resultSpinner = new Spinner('resultspinner');
 
 	browseLeft.addEvent('click', function() {
 		if (browseOffset - yoctogiAggregateLimit >= 0)

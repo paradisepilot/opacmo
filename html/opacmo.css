@@ -16,9 +16,9 @@ body {
 
 .content {
 	padding-top: 18px;
-        padding-bottom: 18px;
-        padding-left: 50px;
-        padding-right: 35px;
+	padding-bottom: 18px;
+	padding-left: 50px;
+	padding-right: 35px;
 	background: #ffffff;
 /*
 	box-shadow: inner 0 0 5px #333333;
@@ -283,6 +283,19 @@ a:hover {
 	vertical-align: middle;
 }
 
+.spinner {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	margin-top: -35px;
+	margin-left: -35px;
+}
+
+#suggestionspinner {
+	display: table-cell;
+	text-align: center;
+}
+
 .row {
 	display: table;
 	overflow: auto;
@@ -299,8 +312,6 @@ a:hover {
 	color: #50515E;
 	float: left;
 	font-family: 'Numans', courier;
-	margin-right: 26px;
-	font-size: 100px;
 	vertical-align: top;
 }
 
