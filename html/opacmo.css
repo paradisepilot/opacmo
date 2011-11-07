@@ -1,13 +1,11 @@
+
 html {
 	background: transparent;
-	background-image: url(images/black_paper.png);
-	background-repeat: repeat;
-	background-position: 0px 0px;
+	background-image: url(images/dark_leather.png);
 }
 
 body {
 	font-family: 'Arimo', helvetica;
-	font-size: 20px;
 	color: #555555;
 	background: transparent;
 }
@@ -17,28 +15,33 @@ body {
 }
 
 .content {
-	padding: 15px 35px;
+	padding-top: 18px;
+        padding-bottom: 18px;
+        padding-left: 50px;
+        padding-right: 35px;
 	background: #ffffff;
+/*
 	box-shadow: inner 0 0 5px #333333;
 	-webkit-box-shadow: inset 0 0 5px #333333;
 	-moz-box-shadow: inset 0 0 5px #333333;
+ */
 }
 
 #query {
 	font-family: 'Arimo', helvetica;
 	font-size: 20px;
-	height: 30px;
+	height: 27px;
 	width: 90%;
 }
 
 .overTxtLabel {
 	font-family: 'Arimo', helvetica;
-        font-size: 20px;
-        height: 30px;
+    	font-size: 20px;
+	height: 27px;
 	color: #aaaaaa;
 	font-style: italic;
 	text-align: left;
-	width: 70%;
+	width: 100%;
 }
 
 a {
@@ -55,16 +58,15 @@ a:hover {
 
 #adv_yoctogi {
 	position: fixed;
-	bottom: 5px;
+	bottom: 9px;
 	text-align: left;
 	color: #555555;
-	font-size: 12px;
 }
 
 .pmccontainer {
 	display: table;
 	overflow: auto;
-	padding-top: 15px;
+	padding-top: 18px;
 }
 
 .linkedlabel {
@@ -82,13 +84,13 @@ a:hover {
 .titlecontainer {
 	font-size: 16px;
 	font-weight: bold;
-	line-height: 24px;
+	line-height: 18px;
 	color: #555555;
 }
 
 .titlecontainer:hover {
 	color: #00709b;
-        cursor: pointer;
+    cursor: pointer;
 }
 
 .resulttitle {
@@ -138,7 +140,6 @@ a:hover {
 	color: #333333;
 	background-color: #fefefe;
 	font-family: 'Numans', courier;
-	font-size: 12px;
 	float: left;
 	cursor: pointer;
 	margin-top: 4px;
@@ -162,8 +163,8 @@ a:hover {
 	border-style: solid;
 	border-color: #6bac00;
 	border-width: 1px;
-	border-radius: 11px
-	-moz-border-radius: 11px
+	border-radius: 11px;
+	-moz-border-radius: 11px;
 }
 
 #downloadtsv {
@@ -202,12 +203,12 @@ a:hover {
 	text-align: center;
 	color: #eeeeee;
 	font-family: 'Arimo', helvetica;
-	font-size: 12px;
-	padding: 5px;
-	background: rgba(255, 255, 255, 0.2);
-        box-shadow: inner 0 0 5px #333333;
-        -webkit-box-shadow: inset 0 0 5px #333333;
-        -moz-box-shadow: inset 0 0 5px #333333;
+	font-size: 16px;
+	padding: 18px 10px;
+	background: rgba(205, 235, 255, 0.2); 
+	box-shadow: inner 0 0 5px #333333;
+	-webkit-box-shadow: inset 0 0 5px #333333;
+	-moz-box-shadow: inset 0 0 5px #333333;
 }
 
 .signatures {
@@ -272,9 +273,8 @@ a:hover {
 .helpbar {
 	display: table;
 	color: #00adee;
-	font-size: 14px;
 	font-style: italic;
-	padding-bottom: 25px;
+	padding-bottom: 27px;
 }
 
 .helpitem {
@@ -291,7 +291,7 @@ a:hover {
 .toprow {
 	display: table;
 	overflow: auto;
-	margin-top: -10px;
+	margin-top: 9px;
 }
 
 .stage {
@@ -338,39 +338,36 @@ a:hover {
 	display: block;
 	float: left;
 	width: 100%;
-	line-height: 28px;
+	line-height: 27px;
 }
 	
 #resultdownloads {
 	display: block;
 	float: left;
 	width: 100%;
-	margin-bottom: 5px;
+	margin-bottom: 9px;
 }
 
 #resultbrowse {
 	display: block;
 	float: left;
 	width: 100%;
-	line-height: 26px;
+	line-height: 27px;
 }
 
 .browsetext {
 	font-family: 'Arimo', helvetica;
-	font-size: 16px;
 	font-style: italic;
 }
 
 .sortedtext {
 	font-family: 'Arimo', helvetica;
-	font-size: 16px;
 	font-style: italic;
 	margin-left: 20px;
 }
 
 .sortedbutton {
 	font-family: 'Arimo', helvetica;
-	font-size: 16px;
 	font-style: italic;
 	margin-left: 13px;
 }
@@ -381,7 +378,6 @@ a:hover {
 
 .sortedbutton-selected {
 	font-family: 'Arimo', helvetica;
-	font-size: 16px;
 	font-style: italic;
 	margin-left: 13px;
 	color: #8bcc00;
@@ -398,7 +394,7 @@ a:hover {
 	font-size: 22px;
 	text-align: center;
 	color: #ff4444;
-	margin-bottom: 16px;
+	margin-bottom: 18px
 }
 
 table {
@@ -419,4 +415,3 @@ td.suggestiontable {
 	font-family: 'Arimo', helvetica;
 	font-size: 13px;
 }
-

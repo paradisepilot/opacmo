@@ -359,7 +359,7 @@ function makeTable(container, matrix, headers, result) {
 		'src': '/images/gray_light/x_alt_12x12.png'
 	});
 	closeButton.addEvent('click', function() {
-		if ($('c' + id).getOpacity() != 1)
+		if ($('c' + id).getStyle('opacity') != 1)
 			return;
 
 		var fadeOut = new Fx.Morph($(id), { duration: 'long' });
@@ -451,7 +451,7 @@ function processQuery() {
 
 	var yoctogiRequest = { clauses: yoctogiClauses, options: yoctogiOptions  }
 
-	if ($('secondstage').getOpacity() == 0) {
+	if ($('secondstage').getStyle('opacity') == 0) {
 		new Fx.Morph($('secondstage'), { duration: 'short' }).start({ opacity: [ 0, 1 ] });
 	}
 
@@ -521,7 +521,7 @@ function runConjunctiveQuery(format) {
 		return;
 
 	if (!format) {
-		if ($('thirdstage').getOpacity() == 0) {
+		if ($('thirdstage').getStyle('opacity') == 0) {
 			new Fx.Morph($('thirdstage'), { duration: 'short' }).start({ opacity: [ 0, 1 ] });
 		}
 	}
@@ -573,17 +573,17 @@ function updateSortedButtons() {
 }
 
 $(window).onload = function() {
-	$('secondstage').setOpacity('0');
-	$('thirdstage').setOpacity('0');
+	$('secondstage').setStyle('opacity', '0');
+	$('thirdstage').setStyle('opacity', '0');
 
 	new Fx.Accordion($('release'), '#release h4', '#release .releasenote');
 
 	$('optionHelpMessages').addEvent('click', function() {
 		if ($('optionHelpMessages').checked) {
 			helperSliders['help0'].slideIn();
-			if ($('secondstage').getOpacity() == 1)
+			if ($('secondstage').getStyle('opacity') == 1)
 				helperSliders['help1'].slideIn();
-			if ($('thirdstage').getOpacity() == 1)
+			if ($('thirdstage').getStyle('opacity') == 1)
 				helperSliders['help2'].slideIn();
 		} else {
 			helperSliders['help0'].slideOut();

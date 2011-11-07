@@ -49,6 +49,13 @@ On Debian 5.0 you have to cheat a little bit to get the FastCGI going.
     cd /usr/include
     sudo ln -s ruby-1.9.0 ruby-1.9.1
 
+Acknowledgements
+----------------
+
+Contributors in alphabetical order:
+
+* Miyuki Fukuma. *Web-Design Consulting & CSS Coding.*
+
 Licenses
 --------
 
