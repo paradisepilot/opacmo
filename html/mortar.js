@@ -15,7 +15,8 @@ var aboutSwitch = new Element('div#aboutswitch', { 'class': 'headerbutton' } );
 var releaseSlider = null;
 var releaseSwitch = new Element('div#releaseswitch');
 var helperSliders = {};
-var noResultsMessage = new Element('span', { 'class': 'noresultsfound', 'html': 'No results found.' });
+var noSuggestionsMessage = new Element('span', { 'class': 'notfound', 'html': 'No suggestions found.' });
+var noResultsMessage = new Element('span', { 'class': 'notfound', 'html': 'No results found.' });
 
 var browseMessage = new Element('span', { 'class': 'browsetext', 'html': '' });
 var browseLeft = new Element('img', { 'class': 'browsebutton', 'src': '/images/gray_dark/arrow_left_12x12.png' });
@@ -70,7 +71,8 @@ var header2ResultHeader = {
 
 var type2Name = {
 		'tsv':		'TSV',
-		'xls':		'Excel'
+		'xls':		'Excel',
+		'galaxy':	'Galaxy'
 };
 
 var suggestionRequest = new Request.JSON({
@@ -89,8 +91,12 @@ var suggestionRequest = new Request.JSON({
 			if (!response.result)
 				return;
 
+			var totalResults = 0;
+
 			for (var result in response.result) {
 				var partialResult = JSON.parse(response.result[result])['result']
+
+				totalResults += partialResult.length;
 
 				if (partialResult.length == 0)
 					continue;
@@ -99,6 +105,9 @@ var suggestionRequest = new Request.JSON({
 
 				suggestionColumns[id] = result;
 			}
+
+			if (!totalResults)
+				noSuggestionsMessage.inject($('suggestioncontainer'));
 		}
 	});
 
@@ -115,6 +124,9 @@ var resultRequest = new Request.JSON({
 			}
 
 			if (response.download) {
+				if (response.linkout)
+					window.location = response.linkout;
+
 				var type = response.download.replace(/^[^.]+\./, '')
 				var filename = response.download.replace(/^[^\/]+\//, '')
 				var link = new Element('a#downloadfile' + type, {
@@ -135,8 +147,10 @@ var resultRequest = new Request.JSON({
 			$('resultbrowse').empty();
 			$('resultcontainer').empty();
 
-			makeDownload('tsv');
-			makeDownload('xls');
+			makeDownload('tsv', 'btn primary');
+			makeDownload('xls', 'btn primary');
+			if (Cookie.read('yoctogi_session'))
+				makeDownload('galaxy', 'btn success');
 
 			if (response.count > 0) {
 				var pmcidsReturned = 0;
@@ -238,9 +252,9 @@ function topbar_hide_modals() {
 	$('release').set('class', 'modal hide');
 }
 
-function makeDownload(format) {
+function makeDownload(format, clazz) {
 	var downloadButton = new Element('div#download' + format, {
-		'class': 'btn primary',
+		'class': clazz,
 		'html': format.toUpperCase()
 	});
 	downloadButton.addEvent('click', function() {
@@ -367,7 +381,11 @@ function makeTable(container, matrix, headers, result) {
 		fadeOut.addEvent('complete', function() {
 			$(id).dispose();
 			browseOffset = 0;
+			if ($('resultcontainer').getChildren().length == 0)
+				helperSliders['help2'].slideOut();
 			runConjunctiveQuery();
+			if ($('suggestioncontainer').getChildren().length == 0)
+				helperSliders['help1'].slideOut();
 		});
 
 		fadeOut.start({
@@ -572,6 +590,20 @@ function updateSortedButtons() {
 		sortedByOBO.set('class', 'sortedbutton-selected');
 }
 
+function updateHelpers() {
+	if ($('optionHelpMessages').checked) {
+		helperSliders['help0'].slideIn();
+		if ($('secondstage').getStyle('opacity') == 1 && $('suggestioncontainer').getChildren().length > 0)
+			helperSliders['help1'].slideIn();
+		if ($('thirdstage').getStyle('opacity') == 1 && $('resultcontainer').getChildren().length > 0)
+			helperSliders['help2'].slideIn();
+	} else {
+		helperSliders['help0'].slideOut();
+		helperSliders['help1'].slideOut();
+		helperSliders['help2'].slideOut();
+	}
+}
+
 $(window).onload = function() {
 	$('secondstage').setStyle('opacity', '0');
 	$('thirdstage').setStyle('opacity', '0');
@@ -579,17 +611,7 @@ $(window).onload = function() {
 	new Fx.Accordion($('release'), '#release h4', '#release .releasenote');
 
 	$('optionHelpMessages').addEvent('click', function() {
-		if ($('optionHelpMessages').checked) {
-			helperSliders['help0'].slideIn();
-			if ($('secondstage').getStyle('opacity') == 1)
-				helperSliders['help1'].slideIn();
-			if ($('thirdstage').getStyle('opacity') == 1)
-				helperSliders['help2'].slideIn();
-		} else {
-			helperSliders['help0'].slideOut();
-			helperSliders['help1'].slideOut();
-			helperSliders['help2'].slideOut();
-		}
+		updateHelpers();
 	});
 
 	$('optionCaseSensitive').addEvent('click', function() {

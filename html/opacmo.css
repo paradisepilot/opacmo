@@ -75,7 +75,7 @@ a:hover {
 	color: #888888;
 }
 
-.noresultsfound {
+.notfound {
 	font-size: 16px;
 	font-style: italic;
 	color: #555555;
@@ -172,6 +172,10 @@ a:hover {
 }
 
 #downloadxls {
+	margin: 5px;
+}
+
+#downloadgalaxy {
 	margin: 5px;
 }
 
