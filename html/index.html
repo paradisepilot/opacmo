@@ -15,9 +15,11 @@
 			<div class="fill">
 			<div class="container">
 			<ul>
-			<li id="topbar_home" class="active"><a onclick="topbar_hide_modals()">Home</a></li>
-			<li id="topbar_about"><a onclick="topbar_hide_modals(); topbar_activate('topbar_about'); $('about').set('class', 'modal')">About</a></li>
-			<li id="topbar_release"><a onclick="topbar_hide_modals(); topbar_activate('topbar_release'); $('release').set('class', 'modal')">Release Notes</a></li>
+			<li id="topbar_home" class="active"><a onclick="topbar_hide_modals(); topbar_activate('topbar_home'); $('juice').set('class', 'content')">Home</a></li>
+			<li id="topbar_about"><a onclick="topbar_hide_modals(); topbar_activate('topbar_about'); $('about').set('class', 'content')">About</a></li>
+			<li id="topbar_release"><a onclick="topbar_hide_modals(); topbar_activate('topbar_release'); $('release').set('class', 'content')">Release Notes</a></li>
+			<li id="topbar_galaxy"><a onclick="topbar_hide_modals(); topbar_activate('topbar_galaxy'); $('galaxy').set('class', 'content')">Galaxy</a></li>
+			<li id="topbar_acknowledgements"><a onclick="topbar_hide_modals(); topbar_activate('topbar_acknowledgements'); $('acknowledgements').set('class', 'content')">Acknowledgements</a></li>
 			</ul>
 			</div>
 			</div>
@@ -45,7 +47,7 @@
 				Powered&nbsp;by&nbsp;<a style="text-decoration: none;" href="http://www.yoctogi.org/" target="_blank"><img src="images/Yoctogi80.png"></img></a>
 			</div>
 		</div>
-		<div class="content">
+		<div id="juice" class="content">
 			<div id="notifications"></div>
 			<div id="help0" class="helpbar"><div class="helpitem"><img src="images/cyan/lightbulb_15x24.png"></img></div><div class="helpitem">Find publications linked to genes, proteins, species, diseases and other ontological terms. Start off with entering some biological or biomedical term that you like to search for in the text field below, such as BRCA2, leukemia, lactase activity, Mus musculus. The search starts seamlessly when you enter two or more letters. For example, try entering 'brc'.</div></div>
 			<div class="toprow">
@@ -87,14 +89,12 @@
 			</div>
 		</div>
 		<div id="about" class="modal hide">
-			<div class="modal-header">
-				<div class="close" onclick="topbar_hide_modals()">&times;</div>
-				<h3>About</h3>
-			</div>
-			<div class="modal-body">
-				opacmo is the Open Access Mortar &mdash; a mash-up of biological and
-				biomedical terms linked to publications of the open-access subset of
-				PubMed Central.<br />
+			<div class="row">
+				<p>
+					opacmo is the Open Access Mortar &mdash; a mash-up of biological and
+					biomedical terms linked to publications of the open-access subset of
+					PubMed Central.
+				</p>
 				<p>
 					opacmo is currently in its development phase. You can read more about
 					it in <a style="text-decoration: underline;" href="http://joachimbaran.wordpress.com/2011/07/25/opacmo-new/" target="_blank">this blog post</a>.
@@ -107,12 +107,72 @@
 				</p>
 			</div>
 		</div>
-		<div id="release" class="modal hide">
-			<div class="modal-header">
-				<a class="close" onclick="topbar_hide_modals()">&times;</a>
-				<h3>Release Notes</h3>
+		<div id="acknowledgements" class="modal hide">
+			<div class="row">
+				<p>
+					Contributors in alphabetical order:
+					<ul>
+						<li>Miyuki Fukuma. <i>Web-Design Consulting & CSS Coding.</i></li>
+					</ul>
+				</p>
 			</div>
-			<div class="modal-body">
+		</div>
+		<div id="galaxy" class="modal hide">
+			<div class="row">
+				<p>
+					opacmo can easily be added to Galaxy (http://usegalaxy.org) using the following set-up.
+				</p>
+				<p>
+					If you have not installed Galaxy already, you can do so by:
+<pre>
+hg clone https://bitbucket.org/galaxy/galaxy-dist
+cd galaxy-dist
+./run.sh
+</pre>
+					You should have a local Galaxy installation available under 'http://localhost:8080' now. To proceed, stop the server by finding the line 'Starting server in PID <i>[...]</i>.' and running 'kill <i>[...]</i>.
+				</p>
+				<p>
+					Copy and paste the following tool configuration into the file 'tools/data_source/opacmo.xml':
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#004a43; '>&lt;?</span><span style='color:#200080; font-weight:bold; '>xml</span><span style='color:#004a43; '> </span><span style='color:#074726; '>version</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#7d0045; '>1.0</span><span style='color:#1060b6; '>"</span><span style='color:#004a43; '>?></span>
+<span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>tool</span> <span style='color:#474796; '>name</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>opacmo</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>id</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>opacmo</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>tool_type</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>data_source</span><span style='color:#1060b6; '>"</span><span style='color:#0057a6; '>></span>
+    <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>description</span><span style='color:#0057a6; '>></span>The Open Access Mortar<span style='color:#0057a6; '>&lt;/</span><span style='color:#333385; '>description</span><span style='color:#0057a6; '>></span>
+    <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>command</span> <span style='color:#474796; '>interpreter</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>python</span><span style='color:#1060b6; '>"</span><span style='color:#0057a6; '>></span>data_source.py $output $__app__.config.output_size_limit<span style='color:#0057a6; '>&lt;/</span><span style='color:#333385; '>command</span><span style='color:#0057a6; '>></span>
+    <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>inputs</span> <span style='color:#474796; '>action</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>http://www.opacmo.org/yoctogi.fcgi</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>check_values</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>false</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>target</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>_top</span><span style='color:#1060b6; '>"</span><span style='color:#0057a6; '>></span> 
+        <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>display</span><span style='color:#0057a6; '>></span>go to opacmo server $GALAXY_URL<span style='color:#0057a6; '>&lt;/</span><span style='color:#333385; '>display</span><span style='color:#0057a6; '>></span>
+        <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>param</span> <span style='color:#474796; '>name</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>GALAXY_URL</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>type</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>baseurl</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>value</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>/</span><span style='color:#1060b6; '>"</span> <span style='color:#0057a6; '>/></span>
+    <span style='color:#0057a6; '>&lt;/</span><span style='color:#333385; '>inputs</span><span style='color:#0057a6; '>></span>
+    <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>request_param_translation</span><span style='color:#0057a6; '>></span>
+        <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>request_param</span> <span style='color:#474796; '>galaxy_name</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>URL_method</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>remote_name</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>URL_method</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>missing</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>post</span><span style='color:#1060b6; '>"</span> <span style='color:#0057a6; '>/></span>
+        <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>request_param</span> <span style='color:#474796; '>galaxy_name</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>data_type</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>remote_name</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>data_type</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>missing</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>auto</span><span style='color:#1060b6; '>"</span> <span style='color:#0057a6; '>/></span>
+    <span style='color:#0057a6; '>&lt;/</span><span style='color:#333385; '>request_param_translation</span><span style='color:#0057a6; '>></span>
+    <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>uihints</span> <span style='color:#474796; '>minwidth</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>1024</span><span style='color:#1060b6; '>"</span><span style='color:#0057a6; '>/></span>
+    <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>outputs</span><span style='color:#0057a6; '>></span>
+        <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>data</span> <span style='color:#474796; '>name</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>output</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>format</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>tsv</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>label</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>${tool.name} on $getVar( 'q', 'unknown position' )</span><span style='color:#1060b6; '>"</span><span style='color:#0057a6; '>/></span>
+    <span style='color:#0057a6; '>&lt;/</span><span style='color:#333385; '>outputs</span><span style='color:#0057a6; '>></span>
+    <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>options</span> <span style='color:#474796; '>sanitize</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>False</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>refresh</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>True</span><span style='color:#1060b6; '>"</span><span style='color:#0057a6; '>/></span>
+<span style='color:#0057a6; '>&lt;/</span><span style='color:#333385; '>tool</span><span style='color:#0057a6; '>></span>
+</pre>
+				</p>
+				<p>
+					Now, add the tool to your 'tool_conf.xml' by adding 'opacmo.xml' to the 'Get Data' section. For example:
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#004a43; '>&lt;?</span><span style='color:#200080; font-weight:bold; '>xml</span><span style='color:#004a43; '> </span><span style='color:#074726; '>version</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#7d0045; '>1.0</span><span style='color:#1060b6; '>"</span><span style='color:#004a43; '>?></span>
+<span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>toolbox</span><span style='color:#0057a6; '>></span>
+  <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>section</span> <span style='color:#474796; '>name</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>Get Data</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>id</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>getext</span><span style='color:#1060b6; '>"</span><span style='color:#0057a6; '>></span>
+    <span style='font-weight: bold; color:#0057a6; '>&lt;</span><span style='color:#333385; '>tool</span> <span style='color:#474796; '>file</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>data_source/opacmo.xml</span><span style='color:#1060b6; '>"</span><span style='color:#0057a6; '>/></span>
+    <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>tool</span> <span style='color:#474796; '>file</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>data_source/upload.xml</span><span style='color:#1060b6; '>"</span><span style='color:#0057a6; '>/></span>
+    <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>tool</span> <span style='color:#474796; '>file</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>data_source/ucsc_tablebrowser.xml</span><span style='color:#1060b6; '>"</span> <span style='color:#0057a6; '>/></span>
+</pre>
+				</p>
+				<p>
+					Finally start the Galaxy server again by running './run.sh'.
+				</p>
+				<p>
+					<i>Note: If you run Galaxy on a cluster, you should edit 'universe_wsgi.ini' and add the line 'opacmo = local:///' under the '[galaxy:tool_runners]' section.</i>
+				</p>
+			</div>
+		</div>
+		<div id="release" class="modal hide">
+			<div class="row">
 				<h4>Release 1</h4>
 				<div class="releasenote">
 					<p>

@@ -124,8 +124,10 @@ var resultRequest = new Request.JSON({
 			}
 
 			if (response.download) {
-				if (response.linkout)
+				if (response.linkout) {
+					Cookie.dispose('yoctogi_session');
 					window.location = response.linkout;
+				}
 
 				var type = response.download.replace(/^[^.]+\./, '')
 				var filename = response.download.replace(/^[^\/]+\//, '')
@@ -242,14 +244,19 @@ function topbar_activate(id) {
 	$('topbar_home').erase('class');
 	$('topbar_about').erase('class');
 	$('topbar_release').erase('class');
+	$('topbar_galaxy').erase('class');
+	$('topbar_acknowledgements').erase('class');
 
 	$(id).set('class', 'active');
 }
 
 function topbar_hide_modals() {
 	topbar_activate('topbar_home');
+	$('juice').set('class', 'modal hide');
 	$('about').set('class', 'modal hide');
 	$('release').set('class', 'modal hide');
+	$('galaxy').set('class', 'modal hide');
+	$('acknowledgements').set('class', 'modal hide');
 }
 
 function makeDownload(format, clazz) {
