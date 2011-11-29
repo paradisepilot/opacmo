@@ -36,6 +36,10 @@ if [[ "$db" = 'psql' ]] ; then
 	fi
 
 	psql -c "CREATE TABLE yoctogi (pmcid VARCHAR(24), entrezname VARCHAR(512), entrezid VARCHAR(24), entrezscore INTEGER, speciesname VARCHAR(512), speciesid VARCHAR(24), speciesscore INTEGER, oboname VARCHAR(512), oboid VARCHAR(24), oboscore INTEGER)" yoctogi
+	for prefix in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
+		psql -c "CREATE TABLE yoctogi__$prefix (CHECK (entrezname ILIKE '$prefix%')) INHERITS (yoctogi)" yoctogi
+	done
+
 	psql -c "CREATE TABLE yoctogi_titles (pmcid VARCHAR(24), pmctitle TEXT)" yoctogi
 fi
 
@@ -65,7 +69,11 @@ for tsv in opacmo_data/*__yoctogi*.tsv ; do
 	echo " - processing `basename "$tsv"`"
 
 	if [[ "$db" = 'psql' ]] ; then
-		psql -c "COPY $table FROM '`pwd`/$table_file'" yoctogi
+		for prefix in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
+			prefix_upper=`echo -n "$prefix" | tr a-z A-Z`
+			<$table_file grep -E "^[^	]+	($prefix|$prefix_upper)" > `pwd`/${table_file}__$prefix
+			psql -c "COPY $table FROM '`pwd`/${table_file}__$prefix'" yoctogi
+		done
 	fi
 
 	if [[ "$db" = 'mongo' ]] ; then
@@ -80,31 +88,37 @@ done
 rm -f opacmo_data/*tsv.tmp
 
 if [[ "$db" = 'psql' ]] ; then
-	psql -c "CREATE INDEX pmcid_idx ON yoctogi (pmcid)" yoctogi
-	psql -c "CREATE INDEX pmcid_lower_idx ON yoctogi ((lower(pmcid)))" yoctogi
-	psql -c "CREATE INDEX entrezname_idx ON yoctogi (entrezname)" yoctogi
-	psql -c "CREATE INDEX entrezname_lower_idx ON yoctogi ((lower(entrezname)))" yoctogi
-	psql -c "CREATE INDEX entrezid_idx ON yoctogi (entrezid)" yoctogi
-	psql -c "CREATE INDEX entrezid_lower_idx ON yoctogi ((lower(entrezid)))" yoctogi
-	psql -c "CREATE INDEX speciesname_idx ON yoctogi (speciesname)" yoctogi
-	psql -c "CREATE INDEX speciesname_lower_idx ON yoctogi ((lower(speciesname)))" yoctogi
-	psql -c "CREATE INDEX speciesid_idx ON yoctogi (speciesid)" yoctogi
-	psql -c "CREATE INDEX speciesid_lower_idx ON yoctogi ((lower(speciesid)))" yoctogi
-	psql -c "CREATE INDEX oboname_idx ON yoctogi (oboname)" yoctogi
-	psql -c "CREATE INDEX oboname_lower_idx ON yoctogi ((lower(oboname)))" yoctogi
-	psql -c "CREATE INDEX oboid_idx ON yoctogi (oboid)" yoctogi
-	psql -c "CREATE INDEX oboid_lower_idx ON yoctogi ((lower(oboid)))" yoctogi
+	for prefix in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
+		psql -c "CREATE INDEX pmcid__${prefix}_idx ON yoctogi__$prefix (pmcid)" yoctogi
+		psql -c "CREATE INDEX pmcid_lower__${prefix}_idx ON yoctogi__$prefix ((lower(pmcid)))" yoctogi
+		psql -c "CREATE INDEX entrezname__${prefix}_idx ON yoctogi__$prefix (entrezname)" yoctogi
+		psql -c "CREATE INDEX entrezname_lower__${prefix}_idx ON yoctogi__$prefix ((lower(entrezname)))" yoctogi
+		psql -c "CREATE INDEX entrezid__${prefix}_idx ON yoctogi__$prefix (entrezid)" yoctogi
+		psql -c "CREATE INDEX entrezid_lower__${prefix}_idx ON yoctogi__$prefix ((lower(entrezid)))" yoctogi
+		psql -c "CREATE INDEX speciesname__${prefix}_idx ON yoctogi__$prefix (speciesname)" yoctogi
+		psql -c "CREATE INDEX speciesname_lower__${prefix}_idx ON yoctogi__$prefix ((lower(speciesname)))" yoctogi
+		psql -c "CREATE INDEX speciesid___${prefix}idx ON yoctogi__$prefix (speciesid)" yoctogi
+		psql -c "CREATE INDEX speciesid_lower__${prefix}_idx ON yoctogi__$prefix ((lower(speciesid)))" yoctogi
+		psql -c "CREATE INDEX oboname__${prefix}_idx ON yoctogi__$prefix (oboname)" yoctogi
+		psql -c "CREATE INDEX oboname_lower__${prefix}_idx ON yoctogi__$prefix ((lower(oboname)))" yoctogi
+		psql -c "CREATE INDEX oboid__${prefix}_idx ON yoctogi__$prefix (oboid)" yoctogi
+		psql -c "CREATE INDEX oboid_lower__${prefix}_idx ON yoctogi__$prefix ((lower(oboid)))" yoctogi
+	done
 
 	psql -c "CREATE INDEX titles_pmcid_idx ON yoctogi_titles (pmcid)" yoctogi
 fi
 
 if [[ "$db" = 'psql' ]] ; then
-	echo "Almost done."
+	psql -c 'GRANT SELECT ON yoctogi TO yoctogi' yoctogi
+	psql -c 'GRANT SELECT ON yoctogi_titles TO yoctogi' yoctogi
+	for prefix in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
+		psql -c "GRANT SELECT ON yoctogi__$prefix TO yoctogi" yoctogi
+	done
+
 	echo ""
-	echo "For security, you will have to grant permissions to the 'yoctogi' user manually."
-	echo "Do the folling SQL commands manually:"
-	echo "  GRANT SELECT ON yoctogi TO yoctogi;"
-	echo "  GRANT SELECT ON yoctogi_titles TO yoctogi;"
+	echo "SECURITY"
+	echo "  Note that the user 'yoctogi' has SELECT permissions"
+	echo "  on all Yoctogi tables."
 fi
 
 if [[ "$db" = 'mongo' ]] ; then
