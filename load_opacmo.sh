@@ -35,9 +35,14 @@ if [[ "$db" = 'psql' ]] ; then
 		exit 1
 	fi
 
-	psql -c "CREATE TABLE yoctogi (pmcid VARCHAR(24), entrezname VARCHAR(512), entrezid VARCHAR(24), entrezscore INTEGER, speciesname VARCHAR(512), speciesid VARCHAR(24), speciesscore INTEGER, oboname VARCHAR(512), oboid VARCHAR(24), oboscore INTEGER)" yoctogi
+	psql -c "CREATE TABLE yoctogi (pmcid VARCHAR(24), entrezname__partition VARCHAR(1), entrezname VARCHAR(512), entrezid VARCHAR(24), entrezscore INTEGER, speciesname VARCHAR(512), speciesid VARCHAR(24), speciesscore INTEGER, oboname VARCHAR(512), oboid VARCHAR(24), oboscore INTEGER)" yoctogi
 	for prefix in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
-		psql -c "CREATE TABLE yoctogi__$prefix (CHECK (entrezname ILIKE '$prefix%')) INHERITS (yoctogi)" yoctogi
+		prefix_uppercase=`echo -n $prefix | tr a-z A-Z`
+		if [[ "$prefix" = "$prefix_uppercase" ]] ; then
+			psql -c "CREATE TABLE yoctogi__$prefix (CHECK (entrezname__partition = '$prefix')) INHERITS (yoctogi)" yoctogi
+		else
+			psql -c "CREATE TABLE yoctogi__$prefix (CHECK (entrezname__partition = '$prefix' OR entrezname__partition = '$prefix_uppercase')) INHERITS (yoctogi)" yoctogi
+		fi
 	done
 
 	psql -c "CREATE TABLE yoctogi_titles (pmcid VARCHAR(24), pmctitle TEXT)" yoctogi
@@ -60,7 +65,7 @@ for tsv in opacmo_data/*__yoctogi*.tsv ; do
 				if (entrezscore == "") { entrezscore='0' };
 				if (speciesscore == "") { speciesscore='0' };
 				if (oboscore == "") { oboscore='0' };
-				print "PMC"$1"\t"$2"\t"$3"\t"entrezscore"\t"$5"\t"$6"\t"speciesscore"\t"$8"\t"$9"\t"oboscore;
+				print "PMC"$1"\t"substr($2, 1, 1)"\t"$2"\t"$3"\t"entrezscore"\t"$5"\t"$6"\t"speciesscore"\t"$8"\t"$9"\t"oboscore;
 			}' $tsv | grep -E '^PMC[0-9]+	' > $table_file
 	else
 		awk -F "\t" '{print "PMC"$0}' $tsv > $table_file
@@ -70,8 +75,8 @@ for tsv in opacmo_data/*__yoctogi*.tsv ; do
 
 	if [[ "$db" = 'psql' ]] ; then
 		for prefix in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
-			prefix_upper=`echo -n "$prefix" | tr a-z A-Z`
-			<$table_file grep -E "^[^	]+	($prefix|$prefix_upper)" > `pwd`/${table_file}__$prefix
+			prefix_uppercase=`echo -n "$prefix" | tr a-z A-Z`
+			<$table_file grep -E "^[^	]+	($prefix|$prefix_uppercase)" > `pwd`/${table_file}__$prefix
 			psql -c "COPY $table FROM '`pwd`/${table_file}__$prefix'" yoctogi
 		done
 	fi
@@ -91,6 +96,7 @@ if [[ "$db" = 'psql' ]] ; then
 	for prefix in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
 		psql -c "CREATE INDEX pmcid__${prefix}_idx ON yoctogi__$prefix (pmcid)" yoctogi
 		psql -c "CREATE INDEX pmcid_lower__${prefix}_idx ON yoctogi__$prefix ((lower(pmcid)))" yoctogi
+		psql -c "CREATE INDEX entrezname__partition__${prefix}_idx ON yoctogi__$prefix (entrezname)" yoctogi
 		psql -c "CREATE INDEX entrezname__${prefix}_idx ON yoctogi__$prefix (entrezname)" yoctogi
 		psql -c "CREATE INDEX entrezname_lower__${prefix}_idx ON yoctogi__$prefix ((lower(entrezname)))" yoctogi
 		psql -c "CREATE INDEX entrezid__${prefix}_idx ON yoctogi__$prefix (entrezid)" yoctogi
