@@ -35,14 +35,14 @@ if [[ "$db" = 'psql' ]] ; then
 		exit 1
 	fi
 
-	psql -c "CREATE TABLE yoctogi (pmcid VARCHAR(24), entrezname__partition VARCHAR(1), entrezname VARCHAR(512), entrezid VARCHAR(24), entrezscore INTEGER, speciesname VARCHAR(512), speciesid VARCHAR(24), speciesscore INTEGER, oboname VARCHAR(512), oboid VARCHAR(24), oboscore INTEGER)" yoctogi
-	for prefix in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
-		prefix_uppercase=`echo -n $prefix | tr a-z A-Z`
-		if [[ "$prefix" = "$prefix_uppercase" ]] ; then
-			psql -c "CREATE TABLE yoctogi__$prefix (CHECK (entrezname__partition = '$prefix')) INHERITS (yoctogi)" yoctogi
-		else
-			psql -c "CREATE TABLE yoctogi__$prefix (CHECK (entrezname__partition = '$prefix' OR entrezname__partition = '$prefix_uppercase')) INHERITS (yoctogi)" yoctogi
-		fi
+	echo -n "Creating fact table: "
+	psql -c "CREATE TABLE yoctogi (pmcid VARCHAR(24), prefix__partition VARCHAR(2), entrezname VARCHAR(512), entrezid VARCHAR(24), entrezscore INTEGER, speciesname VARCHAR(512), speciesid VARCHAR(24), speciesscore INTEGER, oboname VARCHAR(512), oboid VARCHAR(24), oboscore INTEGER)" yoctogi
+	echo -n "Creating dimension tables:"
+	for prefix_0 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
+		for prefix_1 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
+			echo -n "  prefix ${prefix_0}${prefix_1}: "
+			psql -c "CREATE TABLE yoctogi__${prefix_0}${prefix_1} (CHECK (prefix__partition = '${prefix_0}${prefix_1}')) INHERITS (yoctogi)" yoctogi
+		done
 	done
 
 	psql -c "CREATE TABLE yoctogi_titles (pmcid VARCHAR(24), pmctitle TEXT)" yoctogi
@@ -55,8 +55,6 @@ for tsv in opacmo_data/*__yoctogi*.tsv ; do
 	table=`basename "$tsv" .tsv | grep -o -E 'yoctogi(_.+)?$'`
 
 	# If we see the main table, then make sure that all scores are integers.
-	# Also: there needs to be a small fix for dealing with non-PMCIDs such
-	# as 'BMC_Bioinformatics-6-Suppl' that can withstand previous filter runs.
 	if [[ "$table" = 'yoctogi' ]] ; then
 		awk -F "\t" '{
 				entrezscore=$4;
@@ -65,8 +63,19 @@ for tsv in opacmo_data/*__yoctogi*.tsv ; do
 				if (entrezscore == "") { entrezscore='0' };
 				if (speciesscore == "") { speciesscore='0' };
 				if (oboscore == "") { oboscore='0' };
-				print "PMC"$1"\t"substr($2, 1, 1)"\t"$2"\t"$3"\t"entrezscore"\t"$5"\t"$6"\t"speciesscore"\t"$8"\t"$9"\t"oboscore;
-			}' $tsv | grep -E '^PMC[0-9]+	' > $table_file
+				entreznameprefix=tolower(substr($2, 1, 2));
+				speciesnameprefix=tolower(substr($5, 1, 2));
+				obonameprefix=tolower(substr($8, 1, 2));
+				entrezidprefix=tolower(substr($3, 1, 2));
+				speciesidprefix=tolower(substr($6, 1, 2));
+				oboidprefix=tolower(substr($9, 1, 2));
+				print "PMC"$1"\t"entreznameprefix"\t"$2"\t"$3"\t"entrezscore"\t"$5"\t"$6"\t"speciesscore"\t"$8"\t"$9"\t"oboscore;
+				print "PMC"$1"\t"speciesnameprefix"\t"$2"\t"$3"\t"entrezscore"\t"$5"\t"$6"\t"speciesscore"\t"$8"\t"$9"\t"oboscore;
+				print "PMC"$1"\t"obonameprefix"\t"$2"\t"$3"\t"entrezscore"\t"$5"\t"$6"\t"speciesscore"\t"$8"\t"$9"\t"oboscore;
+				print "PMC"$1"\t"entrezidprefix"\t"$2"\t"$3"\t"entrezscore"\t"$5"\t"$6"\t"speciesscore"\t"$8"\t"$9"\t"oboscore;
+				print "PMC"$1"\t"speciesidprefix"\t"$2"\t"$3"\t"entrezscore"\t"$5"\t"$6"\t"speciesscore"\t"$8"\t"$9"\t"oboscore;
+				print "PMC"$1"\t"oboidprefix"\t"$2"\t"$3"\t"entrezscore"\t"$5"\t"$6"\t"speciesscore"\t"$8"\t"$9"\t"oboscore;
+			}' $tsv | grep -E '^PMC[0-9]+	' | sort | uniq > $table_file
 	else
 		awk -F "\t" '{print "PMC"$0}' $tsv > $table_file
 	fi
@@ -74,10 +83,12 @@ for tsv in opacmo_data/*__yoctogi*.tsv ; do
 	echo " - processing `basename "$tsv"`"
 
 	if [[ "$db" = 'psql' ]] ; then
-		for prefix in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
-			prefix_uppercase=`echo -n "$prefix" | tr a-z A-Z`
-			<$table_file grep -E "^[^	]+	($prefix|$prefix_uppercase)" > `pwd`/${table_file}__$prefix
-			psql -c "COPY $table FROM '`pwd`/${table_file}__$prefix'" yoctogi
+		for prefix_0 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
+			for prefix_1 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
+				echo -n "   prefix ${prefix_0}${prefix_1}: "
+				<$table_file grep -E "^[^	]+	${prefix_0}${prefix_1}	" > `pwd`/${table_file}__${prefix_0}${prefix_1}
+				psql -c "COPY $table FROM '`pwd`/${table_file}__${prefix_0}${prefix_1}'" yoctogi
+			done
 		done
 	fi
 
@@ -88,28 +99,34 @@ for tsv in opacmo_data/*__yoctogi*.tsv ; do
 			mongoimport --type tsv -d yoctogi -c "$table" -f pmcid,pmctitle `pwd`/$table_file
 		fi
 	fi
+
+	rm -f $tsv $table_file ${table_file}__*
 done
 
-rm -f opacmo_data/*tsv.tmp
-
 if [[ "$db" = 'psql' ]] ; then
-	for prefix in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
-		psql -c "CREATE INDEX pmcid__${prefix}_idx ON yoctogi__$prefix (pmcid)" yoctogi
-		psql -c "CREATE INDEX pmcid_lower__${prefix}_idx ON yoctogi__$prefix ((lower(pmcid)))" yoctogi
-		psql -c "CREATE INDEX entrezname__partition__${prefix}_idx ON yoctogi__$prefix (entrezname)" yoctogi
-		psql -c "CREATE INDEX entrezname__${prefix}_idx ON yoctogi__$prefix (entrezname)" yoctogi
-		psql -c "CREATE INDEX entrezname_lower__${prefix}_idx ON yoctogi__$prefix ((lower(entrezname)))" yoctogi
-		psql -c "CREATE INDEX entrezid__${prefix}_idx ON yoctogi__$prefix (entrezid)" yoctogi
-		psql -c "CREATE INDEX entrezid_lower__${prefix}_idx ON yoctogi__$prefix ((lower(entrezid)))" yoctogi
-		psql -c "CREATE INDEX speciesname__${prefix}_idx ON yoctogi__$prefix (speciesname)" yoctogi
-		psql -c "CREATE INDEX speciesname_lower__${prefix}_idx ON yoctogi__$prefix ((lower(speciesname)))" yoctogi
-		psql -c "CREATE INDEX speciesid___${prefix}idx ON yoctogi__$prefix (speciesid)" yoctogi
-		psql -c "CREATE INDEX speciesid_lower__${prefix}_idx ON yoctogi__$prefix ((lower(speciesid)))" yoctogi
-		psql -c "CREATE INDEX oboname__${prefix}_idx ON yoctogi__$prefix (oboname)" yoctogi
-		psql -c "CREATE INDEX oboname_lower__${prefix}_idx ON yoctogi__$prefix ((lower(oboname)))" yoctogi
-		psql -c "CREATE INDEX oboid__${prefix}_idx ON yoctogi__$prefix (oboid)" yoctogi
-		psql -c "CREATE INDEX oboid_lower__${prefix}_idx ON yoctogi__$prefix ((lower(oboid)))" yoctogi
+	for prefix_0 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
+		for prefix_1 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
+			psql -c "CREATE INDEX pmcid__${prefix_0}${prefix_1}_idx ON yoctogi__${prefix_0}${prefix_1} USING btree (pmcid) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX pmcid_lower__${prefix_0}${prefix_1}_idx ON yoctogi__${prefix_0}${prefix_1} USING btree ((lower(pmcid))) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX entrezname__partition__${prefix_0}${prefix_1}_idx ON yoctogi__${prefix_0}${prefix_1} USING btree (entrezname) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX entrezname__${prefix_0}${prefix_1}_idx ON yoctogi__${prefix_0}${prefix_1} USING btree (entrezname) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX entrezname_lower__${prefix_0}${prefix_1}_idx ON yoctogi__${prefix_0}${prefix_1} USING btree ((lower(entrezname))) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX entrezid__${prefix_0}${prefix_1}_idx ON yoctogi__${prefix_0}${prefix_1} USING btree (entrezid) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX entrezid_lower__${prefix_0}${prefix_1}_idx ON yoctogi__${prefix_0}${prefix_1} USING btree ((lower(entrezid))) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX speciesname__${prefix_0}${prefix_1}_idx ON yoctogi__${prefix_0}${prefix_1} USING btree (speciesname) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX speciesname_lower__${prefix_0}${prefix_1}_idx ON yoctogi__${prefix_0}${prefix_1} USING btree ((lower(speciesname))) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX speciesid__${prefix_0}${prefix_1}_idx ON yoctogi__${prefix_0}${prefix_1} USING btree (speciesid) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX speciesid_lower__${prefix_0}${prefix_1}_idx ON yoctogi__${prefix_0}${prefix_1} USING btree ((lower(speciesid))) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX oboname__${prefix_0}${prefix_1}_idx ON yoctogi__${prefix_0}${prefix_1} USING btree (oboname) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX oboname_lower__${prefix_0}${prefix_1}_idx ON yoctogi__${prefix_0}${prefix_1} USING btree ((lower(oboname))) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX oboid__${prefix_0}${prefix_1}_idx ON yoctogi__${prefix_0}${prefix_1} USING btree (oboid) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX oboid_lower__${prefix_0}${prefix_1}_idx ON yoctogi__${prefix_0}${prefix_1} USING btree ((lower(oboid))) WITH (fillfactor=100)" yoctogi
+
+			psql -c "ANALYZE yoctogi__${prefix_0}${prefix_1}" yoctogi
+		done
 	done
+
+	psql -c "ANALYZE yoctogi" yoctogi
 
 	psql -c "CREATE INDEX titles_pmcid_idx ON yoctogi_titles (pmcid)" yoctogi
 fi
@@ -117,8 +134,10 @@ fi
 if [[ "$db" = 'psql' ]] ; then
 	psql -c 'GRANT SELECT ON yoctogi TO yoctogi' yoctogi
 	psql -c 'GRANT SELECT ON yoctogi_titles TO yoctogi' yoctogi
-	for prefix in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
-		psql -c "GRANT SELECT ON yoctogi__$prefix TO yoctogi" yoctogi
+	for prefix_0 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
+		for prefix_1 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
+			psql -c "GRANT SELECT ON yoctogi__${prefix_0}${prefix_1} TO yoctogi" yoctogi
+		done
 	done
 
 	echo ""
