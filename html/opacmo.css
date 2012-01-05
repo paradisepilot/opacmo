@@ -267,6 +267,15 @@ a:hover {
 	font-family: 'Numans', courier;
 }
 
+#news {
+	margin-top: 18px;
+	font-family: 'Numans', courier;
+}
+
+.date {
+	color: #00adee;
+}
+
 #release h4 {
 	background-color: #60d0ee;
 	padding: 5px;
