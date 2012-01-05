@@ -54,6 +54,7 @@ Acknowledgements
 
 Contributors in alphabetical order:
 
+* Kenneth Chu. *Beta Testing.*
 * Miyuki Fukuma. *Web-Design Consulting & CSS Coding.*
 
 Licenses
