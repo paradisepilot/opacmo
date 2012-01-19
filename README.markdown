@@ -3,9 +3,9 @@ opacmo
 
 ![opacmo logo](https://github.com/joejimbo/opacmo/raw/master/html/images/opacmo160.png)
 
-opacmo is the Open Access Mortar — a mash-up of biomedical objects linked to the open-access subset of PubMed Central.
+[opacmo](http://www.opacmo.org) is the Open Access Mortar — a mash-up of biomedical objects linked to the open-access subset of PubMed Central.
 
-Requires Yoctogi backend.
+Requires the lightweight server [Yoctogi](http://www.yoctogi.org/) for big data as backend.
 
 Installation
 ============
