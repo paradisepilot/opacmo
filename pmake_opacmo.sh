@@ -1,15 +1,22 @@
 #!/bin/bash
 
+environment=$1
+
 # Soft limit on maximum number of processes that should be running in parallel.
 # Since make_opacmo.sh sets STATE_NER late, there is the possibility that we
 # fork more instances than given here just because the 'scheduler' is not aware
 # of a freshly spawned process.
-max_processes=8
+if [ "$environment" != 'sge' ] ; then
+	max_processes=4
+else
+	max_processes=100
+fi
 
 # Determines the number of cores available on clusters nodes.
-cores=4
-
-environment=$1
+# Unless you use Ruby 1.9 or (even better) JRuby, leaving the
+# cores set to one is the best option. There will simply be no
+# multi-threading in Ruby 1.8.
+cores=1
 
 cmd=ner
 fork=0

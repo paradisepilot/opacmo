@@ -1,5 +1,26 @@
 #!/bin/bash
 
+os=`uname`
+
+if [ "$os" != 'Darwin' ] && [ "$os" != 'Linux' ] ; then
+        echo "Sorry, but you have to run this script under Mac OS X or Linux."
+        exit 1
+fi
+
+# Use 'gawk' as default. Mac OS X's 'awk' works as well, but
+# for consistency I would suggest running `sudo port install gawk`.
+# The default Linux 'awk' does *not* work.
+if [ "$os" = 'Darwin' ] ; then
+	awk_interpreter=awk
+	sed_regexp=-E
+fi
+if [ "$os" = 'Linux' ] ; then
+	awk_interpreter=gawk
+	sed_regexp=-r
+fi
+
+ruby_interpreter=ruby
+
 PATH=$PATH:./opacmo:./bioknack
 IFS=$(echo -e -n "\n\b")
 
@@ -32,7 +53,7 @@ get_cut_value() {
 # Note: Also rewrites identifiers like BMC_Genomics-6--554113 to
 #       their PubMed Central ID. Here, the PMC-ID would be 554113.
 cut_below() {
-	sed -E 's/^.+-([0-9]+)	/\1	/' $2 \
+	sed $sed_regexp 's/^.+-([0-9]+)	/\1	/' $2 \
 		| ruby -e "STDIN.each { |l|
 				l.chomp!
 				cols = l.split(\"\\t\")
@@ -186,7 +207,7 @@ if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] || [ "$1" = 'sge' ] ; then
 
 	echo " - generating a species white list for filtering species name abbreviations"
 	# Create a whitelist of species names to include. Remove genus entities.
-	awk -F "\t" '{print $3"\t"$1}' dictionaries/names.dmp | grep -E '^.+ [^	]' \
+	$awk_interpreter -F "\t" '{print $3"\t"$1}' dictionaries/names.dmp | grep -E '^.+ [^	]' \
 		| sort -t "	" -k 1,1 > $data_dir/all_species.tmp
 	sort -k 1,1 -t "	" tmp/species > $data_dir/species.tmp
 	join -t "	" -1 1 -2 1 -o 0,2.2 $data_dir/species.tmp $data_dir/all_species.tmp | uniq \
@@ -251,24 +272,24 @@ if [ "$1" = 'all' ] || [ "$1" = 'yoctogi' ] || [ "$1" = 'sge' ] ; then
 			echo "     - adding gene names"
 			sort -k 2,2 -t "	" $joined > $joined.tmp
 			join -t "	" -a 1 -1 2 -2 1 -o 1.1,2.2,0,1.3,1.4,1.5,1.6,1.7 $joined.tmp gene_names.tsv \
-				| awk -F "\t" '{if ($3 == "" || $2 != "") {print $0}}' > $joined.tmp2
+				| $awk_interpreter -F "\t" '{if ($3 == "" || $2 != "") {print $0}}' > $joined.tmp2
 
 			echo "     - adding ontology term-names"
 			sort -k 7,7 -t "	" $joined.tmp2 > $joined.tmp
 			join -t "	" -a 1 -1 7 -2 1 -o 1.1,1.2,1.3,1.4,1.5,1.6,2.2,0,1.8 $joined.tmp term_names.tsv \
-				| awk -F "\t" '{if ($8 == "" || $7 != "") {print $0}}' > $joined.tmp2
+				| $awk_interpreter -F "\t" '{if ($8 == "" || $7 != "") {print $0}}' > $joined.tmp2
 
 			echo "     - adding species names"
 			sort -k 5,5 -t "	" $joined.tmp2 > $joined.tmp
 			join -t "	" -a 1 -1 5 -2 1 -o 1.1,1.2,1.3,1.4,2.2,0,1.6,1.7,1.8,1.9 $joined.tmp $data_dir/species_names.tmp \
-				| awk -F "\t" '{if ($6 == "" || $5 != "") {print $0}}' > $joined.tmp2
+				| $awk_interpreter -F "\t" '{if ($6 == "" || $5 != "") {print $0}}' > $joined.tmp2
 
 			# Convert text fields to lowercase for use with MongoDB. Only convert those fields
 			# for which no programmatic solution can be provided to look up even case-sensitive
 			# entries.
 			if [ $lowercase -eq 1 ] ; then
 				echo "     - adding lower case versions of gene- and term-names"
-				awk -F "\t" '{
+				$awk_interpreter -F "\t" '{
 						gene="";
 						if ($2 ~ /[A-Z]/) {gene=tolower($2)};
 						term="";
