@@ -4,7 +4,12 @@
 # Since make_opacmo.sh sets STATE_NER late, there is the possibility that we
 # fork more instances than given here just because the 'scheduler' is not aware
 # of a freshly spawned process.
-max_processes=4
+max_processes=8
+
+# Determines the number of cores available on clusters nodes.
+cores=4
+
+environment=$1
 
 cmd=ner
 fork=0
@@ -44,8 +49,13 @@ for journal in input/* ; do
 	ln -s ../opacmo_data
 
 	echo "Processing in background: $journal"
-	make_opacmo.sh $cmd `basename $journal` &> FORK_LOG &
-	sleep 1
+	if [ "$1" = 'pner' ] ; then
+		make_opacmo.sh $cmd `basename $journal` &> FORK_LOG &
+		sleep 1
+	else
+		qsub -cwd -N "opacmo.`basename $journal`" -pe smp $cores -b y "opacmo/make_opacmo.sh $cmd `basename $journal` &> FORK_LOG"
+		sleep 5
+	fi
 
 	cd ..
 	let fork=fork+1

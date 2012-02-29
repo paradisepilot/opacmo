@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PATH=$PATH:./bioknack
+PATH=$PATH:./opacmo:./bioknack
 IFS=$(echo -e -n "\n\b")
 
 # Needed to handle 'interesting' implementation of `sort`/`join` on Linux:
@@ -54,16 +54,23 @@ check_dir() {
 help_message() {
 	echo "Usage: make_opacmo.sh command [prefix]"
 	echo ""
-	echo "Valid options for 'command':"
+	echo "Single host options for 'command':"
 	echo "  all          : all of the options below in the listed order"
 	echo "  freeze       : jot down the current state of opacmo/bioknack for versioning"
 	echo "  get          : download gene and species databases, ontologies and PMC archive"
 	echo "  dictionaries : create dictionaries for bioknack's named entity recognition"
 	echo "  ner          : run bioknack's named entity recognition ('prefix' applicable)"
-	echo "  pner         : run bioknack's named entity recognition parallelized"
+	echo "  pner         : run bioknack's parallelized named entity recognition (default)"
 	echo "  tsv          : filter and join NER output into TSV files"
 	echo "  labels       : create TSV files that map identifiers to readable names"
 	echo "  yoctogi      : create denormalized TSV files for loading into Yoctogi"
+	echo ""
+	echo "High performance cluster options for 'command':"
+	echo "  bundle       : execute 'freeze', 'get' and 'dictionaries' from above and then"
+	echo "                 creates a tar file ('bundle.tar') for transferral onto a Sun"
+	echo "                 Grid Engine powered cluster"
+	echo "  sge          : after extracing a bundle from the previous step, continues with"
+	echo "                 the steps 'pner' (cluster version), 'tsv', 'labels' and 'yoctogi'"
 	echo ""
 	echo "The optinal parameter 'prefix' can be used to carry out a NER run on"
 	echo "a subset of PMC. For example, the prefix '\"BMC_*\"' restricts the NER run"
@@ -78,7 +85,7 @@ if [[ $# -lt 1 ]] || [[ $# -gt 2 ]] ; then
 	exit 1
 fi
 
-if [ "$1" != 'all' ] && [ "$1" != 'freeze' ] && [ "$1" != 'get' ] && [ "$1" != 'dictionaries' ] && [ "$1" != 'ner' ] && [ "$1" != 'pner' ] && [ "$1" != 'tsv' ] && [ "$1" != 'labels' ] && [ "$1" != 'yoctogi' ] ; then
+if [ "$1" != 'all' ] && [ "$1" != 'freeze' ] && [ "$1" != 'get' ] && [ "$1" != 'dictionaries' ] && [ "$1" != 'ner' ] && [ "$1" != 'pner' ] && [ "$1" != 'tsv' ] && [ "$1" != 'labels' ] && [ "$1" != 'yoctogi' ]  && [ "$1" != 'bundle' ] && [ "$1" != 'sge' ]; then
 	help_message
 	exit 1
 fi
@@ -98,9 +105,9 @@ if [[ $# -eq 2 ]] ; then
 	prefix=$2
 fi
 
-if [ "$1" = 'all' ] || [ "$1" = 'freeze' ] ; then
+if [ "$1" = 'all' ] || [ "$1" = 'freeze' ] || [ "$1" = 'bundle' ] ; then
 	touch STATE_FREEZE
-	echo "Freezing current versioning..."
+	echo "Freezing current version information..."
 
 	cd bioknack
 	git show-ref --head > ../BIOKNACK_REF
@@ -114,7 +121,7 @@ if [ "$1" = 'all' ] || [ "$1" = 'freeze' ] ; then
 	rm -f STATE_FREEZE
 fi
 
-if [ "$1" = 'all' ] || [ "$1" = 'get' ] ; then
+if [ "$1" = 'all' ] || [ "$1" = 'get' ] || [ "$1" = 'bundle' ] ; then
 	touch STATE_GET
 	date > DATA_INFO
 	mkdir input dictionaries tmp
@@ -124,14 +131,21 @@ if [ "$1" = 'all' ] || [ "$1" = 'get' ] ; then
 	rm -f STATE_GET
 fi
 
-if [ "$1" = 'all' ] || [ "$1" = 'dictionaries' ] ; then
+if [ "$1" = 'all' ] || [ "$1" = 'dictionaries' ] || [ "$1" = 'bundle' ] ; then
 	touch STATE_DICTIONARIES
 	bk_ner_gn.sh genes
 	bk_ner_gn.sh species
 	rm -f STATE_DICTIONARIES
 fi
 
-if [ "$1" = 'all' ] || [ "$1" = 'ner' ] || [ "$1" = 'pner' ] ; then
+if [ "$1" = 'bundle' ] ; then
+	tar cf bundle.tar BIOKNACK_REF BIOKNACK_DIFF OPACMO_REF OPACMO_DIFF DATA_INFO opacmo bioknack input dictionaries tmp
+	echo "Created the file 'bundle.tar'. Transfer this file onto your cluster,"
+	echo "untar it, and then run './make_opacmo.sh continue'."
+	exit 0
+fi
+
+if [ "$1" = 'all' ] || [ "$1" = 'ner' ] || [ "$1" = 'pner' ] || [ "$1" = 'sge' ] ; then
 	if [ "$1" = 'ner' ] ; then
 		touch STATE_NER
 		if [ ! -d opacmo_data ] ; then mkdir opacmo_data ; fi
@@ -161,12 +175,12 @@ if [ "$1" = 'all' ] || [ "$1" = 'ner' ] || [ "$1" = 'pner' ] ; then
 	else
 		touch STATE_PNER
 		if [ ! -d opacmo_data ] ; then mkdir opacmo_data ; fi
-		pmake_opacmo.sh
+		pmake_opacmo.sh $1
 		rm -f STATE_PNER
 	fi
 fi
 
-if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] ; then
+if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] || [ "$1" = 'sge' ] ; then
 	touch STATE_TSV
 	echo "Filtering and joining genes, species and ontology terms..."
 
@@ -211,14 +225,14 @@ if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] ; then
 	rm -f STATE_TSV
 fi
 
-if [ "$1" = 'all' ] || [ "$1" = 'labels' ] ; then
+if [ "$1" = 'all' ] || [ "$1" = 'labels' ] || [ "$1" = 'sge' ] ; then
 	touch STATE_LABELS
 	echo "Generate labels for gene-, species- and ontology-identifiers..."
 	bk_ner_fmt_labels.sh
 	rm -f STATE_LABELS
 fi
 
-if [ "$1" = 'all' ] || [ "$1" = 'yoctogi' ] ; then
+if [ "$1" = 'all' ] || [ "$1" = 'yoctogi' ] || [ "$1" = 'sge' ] ; then
 	touch STATE_YOCTOGI
 	echo "Adding human readable titles, names and terms..."
 
