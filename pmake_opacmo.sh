@@ -18,6 +18,9 @@ fi
 # multi-threading in Ruby 1.8.
 cores=1
 
+# Memory that should be reserved on cluster nodes.
+maxmem=8G
+
 cmd=ner
 fork=0
 
@@ -60,7 +63,7 @@ for journal in input/* ; do
 		make_opacmo.sh $cmd `basename $journal` &> FORK_LOG &
 		sleep 1
 	else
-		qsub -cwd -N "opacmo.`basename $journal`" -pe smp $cores -b y "opacmo/make_opacmo.sh $cmd `basename $journal` &> FORK_LOG"
+		qsub -cwd -N "opacmo.`basename $journal`" -l h_vmem=$maxmem -pe smp $cores -b y "opacmo/make_opacmo.sh $cmd `basename $journal` &> FORK_LOG"
 		sleep 5
 	fi
 
