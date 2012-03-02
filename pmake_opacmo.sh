@@ -60,10 +60,10 @@ for journal in input/* ; do
 
 	echo "Processing in background: $journal"
 	if [ "$1" = 'pner' ] ; then
-		make_opacmo.sh $cmd `basename $journal` &> FORK_LOG &
+		make_opacmo.sh $cmd "`basename $journal`" &> FORK_LOG &
 		sleep 1
 	else
-		qsub -cwd -N "opacmo.`basename $journal`" -l h_vmem=$maxmem -pe smp $cores -b y "opacmo/make_opacmo.sh $cmd `basename $journal` &> FORK_LOG"
+		qsub -cwd -N "opacmo.`basename $journal`" -l h_vmem=$maxmem -pe smp $cores -b y "opacmo/make_opacmo.sh $cmd \"`basename $journal`\" &> FORK_LOG"
 		sleep 5
 	fi
 
