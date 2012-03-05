@@ -139,6 +139,16 @@ if [ "$1" = 'all' ] || [ "$1" = 'freeze' ] || [ "$1" = 'bundle' ] ; then
 	git show-ref --head > ../OPACMO_REF
 	git diff > ../OPACMO_DIFF
 	cd ..
+
+	bash -version > VERSION_BASH
+	$ruby_interpreter -v > VERSION_RUBY
+	rm -f STATE_FREEZE
+fi
+
+if [ "$1" = 'sge' ] ; then
+	touch STATE_FREEZE
+	bash -version > VERSION_CLUSTER_BASH
+	$ruby_interpreter -v > VERSION_CLUSTER_RUBY
 	rm -f STATE_FREEZE
 fi
 
