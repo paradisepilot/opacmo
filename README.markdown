@@ -7,13 +7,38 @@ opacmo
 
 Requires the lightweight server [Yoctogi](http://www.yoctogi.org/) for big data as backend.
 
-Installation
-============
+Text-Mining and Web-Service Set-Up
+==================================
 
-opacmo requires Yoctogi as backend and uses bioknack's `bk_ner_gn.sh` to create the text mining resources.
+opacmo requires [Yoctogi](http://www.yoctogi.org) as backend and uses [bioknack](https://github.com/joejimbo/bioknack) to create the text mining resources.
 
-PostgreSQL
-----------
+Text-Mining 
+-----------
+
+### Running on a Oracle Grid Engine Cluster
+
+Prepare a 'bundle' on a cluster node with internet access or your desktop computer, which can later be extracted and executed on a [Oracle Grid Engine](http://en.wikipedia.org/wiki/Oracle_Grid_Engine) (former Sun Grid Engine) cluster.
+
+    mkdir opacmo_release ; cd opacmo_release
+    git clone git://github.com/joejimbo/opacmo.git
+    git clone git://github.com/joejimbo/bioknack.git
+    opacmo/make_opacmo.sh bundle 2>&1 | tee MAKE_OPACMO_BUNDLE_LOG
+
+Bundling can take a very long time, because it involves downloading all open access publications of PubMed Central, downloading several biomedical databases/ontologies, and preprocessing the latter for the text-mining run. The bundle itself will be quite large too (&gt;25G).
+
+Now transfer the bundle to the cluster, log-in to the cluster, extract the bundle and continue the processing on the cluster. It is important that the chosen path below is accessible (read/write) to all cluster nodes, which is usually the case with your home directory on the cluster or a designated shared mount point.
+
+    scp bundle.tar username@nodeX.yourdomain:/path/opacmo_release
+    ssh username@nodeX.yourdomain
+    cd /path/opacmo_release
+    tar xf bundle.tar
+    screen -DR opacmo_release
+    opacmo/make_opacmo.sh sge 2>&1 | tee MAKE_OPACMO_CLUSTER_LOG
+
+Specific output of grid engine jobs is written into the respective `fork_*` directories as `opacmo.*.{e,o}*`.
+
+Web-Service Database Set-Up
+---------------------------
 
 Install PostgreSQL 8.3 or newer, then -- on a Debian distro -- do
 
@@ -31,7 +56,6 @@ Install PostgreSQL 8.3 or newer, then -- on a Debian distro -- do
 
 
 The `load_opacmo.sh` command expects the Yoctogi TSV files that have been generated in the directory `./opacmo_data`.
-
 
 lighttpd
 --------
