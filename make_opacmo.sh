@@ -170,9 +170,9 @@ if [ "$1" = 'all' ] || [ "$1" = 'dictionaries' ] || [ "$1" = 'bundle' ] ; then
 fi
 
 if [ "$1" = 'bundle' ] ; then
-	tar cf bundle.tar BIOKNACK_REF BIOKNACK_DIFF OPACMO_REF OPACMO_DIFF DATA_INFO opacmo bioknack input dictionaries tmp
+	tar cf bundle.tar BIOKNACK_REF BIOKNACK_DIFF OPACMO_REF OPACMO_DIFF DATA_INFO VERSION_BASH VERSION_RUBY opacmo bioknack input dictionaries tmp
 	echo "Created the file 'bundle.tar'. Transfer this file onto your cluster,"
-	echo "untar it, and then run './make_opacmo.sh continue'."
+	echo "untar it, and then run './make_opacmo.sh sge'."
 	exit 0
 fi
 
