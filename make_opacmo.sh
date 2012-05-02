@@ -226,7 +226,9 @@ if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] || [ "$1" = 'sge' ] ; then
 	for genes in $data_dir/*__genes.tsv ; do
 		echo " - processing `basename "$genes" __genes.tsv`..."
 		species=$data_dir/`basename "$genes" __genes.tsv`__species.tsv
-		terms=$data_dir/`basename "$genes" __genes.tsv`__terms.tsv
+		terms_go=$data_dir/`basename "$genes" __genes.tsv`__terms_go.tsv
+		terms_do=$data_dir/`basename "$genes" __genes.tsv`__terms_do.tsv
+		terms_chebi=$data_dir/`basename "$genes" __genes.tsv`__terms_chebi.tsv
 
 		tmp=`dirname "$genes"`
 		# Postfix is added below. Depends on whether we denormalise or not...
@@ -234,7 +236,9 @@ if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] || [ "$1" = 'sge' ] ; then
 
 		cut_below 3 $genes
 		cut_below 3 $species
-		cut_below 3 $terms
+		cut_below 3 $terms_go
+		cut_below 3 $terms_do
+		cut_below 3 $terms_chebi
 
 		sort -t "	" -k 2,2 $species.tmp > $species.tmp2
 		join -t "	" -1 2 -2 2 -o 1.1,0,1.3 $species.tmp2 $data_dir/whitelist._tmp \
@@ -242,11 +246,15 @@ if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] || [ "$1" = 'sge' ] ; then
 
 		if [[ $denormalize -eq 1 ]] ; then
 			join -t "	" -a 1 -a 2 -1 1 -2 1 -o 0,1.2,1.3,2.2,2.3 $genes.tmp $species.tmp > $tmp/genes_species.tmp
-			join -t "	" -a 1 -a 2 -1 1 -2 1 -o 0,1.2,1.3,1.4,1.5,2.2,2.3 $tmp/genes_species.tmp $terms.tmp > ${out}__joined.tsv
+			join -t "	" -a 1 -a 2 -1 1 -2 1 -o 0,1.2,1.3,1.4,1.5,2.2,2.3 $tmp/genes_species.tmp $terms_go.tmp > $tmp/genes_species_go.tmp
+			join -t "	" -a 1 -a 2 -1 1 -2 1 -o 0,1.2,1.3,1.4,1.5,1.6,1.7,2.2,2.3 $tmp/genes_species_go.tmp $terms_do.tmp > $tmp/genes_species_go_do.tmp
+			join -t "	" -a 1 -a 2 -1 1 -2 1 -o 0,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.2,2.3 $tmp/genes_species_go_do.tmp $terms_chebi.tmp > ${out}__joined.tsv
 		else
 			cp $genes.tmp ${out}__genes_processed.tsv
 			cp $species.tmp ${out}__species_processed.tsv
-			cp $terms.tmp ${out}__terms_processed.tsv
+			cp $terms_go.tmp ${out}__terms_go_processed.tsv
+			cp $terms_do.tmp ${out}__terms_do_processed.tsv
+			cp $terms_chebi.tmp ${out}__terms_chebi_processed.tsv
 		fi
 
 		rm -f $genes.tmp $species.tmp $species.tmp2 $terms.tmp $tmp/*.tmp
@@ -279,47 +287,93 @@ if [ "$1" = 'all' ] || [ "$1" = 'yoctogi' ] || [ "$1" = 'sge' ] ; then
 
 			echo "   - generating Yoctogi main table"
 
+			# The joined TSV has this column structure:
+			#   1. PMC ID
+			#   2. gene ID
+			#   3. gene score
+			#   4. species ID
+			#   5. species score
+			#   6. GO ID
+			#   7. GO score
+			#   8. DO ID
+			#   9. DO score
+			#  10. ChEBI ID
+			#  11. ChEBI score
+
 			echo "     - adding gene names"
 			sort -k 2,2 -t "	" $joined > $joined.tmp
-			join -t "	" -a 1 -1 2 -2 1 -o 1.1,2.2,0,1.3,1.4,1.5,1.6,1.7 $joined.tmp gene_names.tsv \
+			join -t "	" -a 1 -1 2 -2 1 -o 1.1,2.2,0,1.3,1.4,1.5,1.6,1.7,1.8,1.9,1.10,1.11 $joined.tmp gene_names.tsv \
 				| $awk_interpreter -F "\t" '{if ($3 == "" || $2 != "") {print $0}}' > $joined.tmp2
-
-			echo "     - adding ontology term-names"
-			sort -k 7,7 -t "	" $joined.tmp2 > $joined.tmp
-			join -t "	" -a 1 -1 7 -2 1 -o 1.1,1.2,1.3,1.4,1.5,1.6,2.2,0,1.8 $joined.tmp term_names.tsv \
-				| $awk_interpreter -F "\t" '{if ($8 == "" || $7 != "") {print $0}}' > $joined.tmp2
 
 			echo "     - adding species names"
 			sort -k 5,5 -t "	" $joined.tmp2 > $joined.tmp
-			join -t "	" -a 1 -1 5 -2 1 -o 1.1,1.2,1.3,1.4,2.2,0,1.6,1.7,1.8,1.9 $joined.tmp $data_dir/species_names.tmp \
+			join -t "	" -a 1 -1 5 -2 1 -o 1.1,1.2,1.3,1.4,2.2,0,1.6,1.7,1.8,1.9,1.10,1.11,1.12 $joined.tmp $data_dir/species_names.tmp \
 				| $awk_interpreter -F "\t" '{if ($6 == "" || $5 != "") {print $0}}' > $joined.tmp2
+
+			echo "     - adding GO ontology term-names"
+			sort -k 8,8 -t "	" $joined.tmp2 > $joined.tmp
+			join -t "	" -a 1 -1 8 -2 1 -o 1.1,1.2,1.3,1.4,1.5,1.6,1.7,2.2,0,1.9,1.10,1.11,1.12,1.13 $joined.tmp term_names.tsv \
+				| $awk_interpreter -F "\t" '{if ($9 == "" || $8 != "") {print $0}}' > $joined.tmp2
+
+			echo "     - adding DO ontology term-names"
+			sort -k 11,11 -t "	" $joined.tmp2 > $joined.tmp
+			join -t "	" -a 1 -1 11 -2 1 -o 1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,1.10,2.2,0,1.12,1.13,1.14 $joined.tmp term_names.tsv \
+				| $awk_interpreter -F "\t" '{if ($12 == "" || $11 != "") {print $0}}' > $joined.tmp2
+
+			echo "     - adding ChEBI ontology term-names"
+			sort -k 14,14 -t "	" $joined.tmp2 > $joined.tmp
+			join -t "	" -a 1 -1 14 -2 1 -o 1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,1.10,1.11,1.12,1.13,2.2,0,1.15 $joined.tmp term_names.tsv \
+				| $awk_interpreter -F "\t" '{if ($15 == "" || $14 != "") {print $0}}' > $joined.tmp2
 
 			# Convert text fields to lowercase for use with MongoDB. Only convert those fields
 			# for which no programmatic solution can be provided to look up even case-sensitive
 			# entries.
 			if [ $lowercase -eq 1 ] ; then
-				echo "     - adding lower case versions of gene- and term-names"
+				echo "     - adding lower case versions of gene-, species- and term-names"
 				$awk_interpreter -F "\t" '{
 						gene="";
-						if ($2 ~ /[A-Z]/) {gene=tolower($2)};
-						term="";
-						if ($8 ~ /[A-Z]/) {term=tolower($8)};
-						print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10"\t"gene"\t"term
+						if ($2 ~ /[A-Za-z0-9]/) {gene=tolower($2)};
+						species="";
+						if ($5 ~ /[A-Za-z0-9]/) {species=tolower($5)};
+						term_go="";
+						if ($8 ~ /[A-Za-z0-9]/) {term_go=tolower($8)};
+						term_do="";
+						if ($11 ~ /[A-Za-z0-9]/) {term_do=tolower($11)};
+						term_chebi="";
+						if ($14 ~ /[A-Za-z0-9]/) {term_chebi=tolower($14)};
+						print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10"\t"$11"\t"$12"\t"$13"\t"$14"\t"$15"\t"$16"\t"gene"\t"species"\t"term_go"\t"term_do"\t"term_chebi
 					}' $joined.tmp2 \
 					> $data_dir/`basename $joined __joined.tsv`__yoctogi.tsv
 			else
 				mv $joined.tmp2 $data_dir/`basename $joined __joined.tsv`__yoctogi.tsv
 			fi
 
-			echo "   - generating Yoctogi dimension table"
+			echo "   - generating Yoctogi dimension tables"
 
 			echo "     - publication titles"
 			join -t "	" -1 1 -2 1 -o 0,2.2 $joined titles.tsv | uniq \
 				> $data_dir/`basename $joined __joined.tsv`__yoctogi_titles.tsv
 
+			echo "     - publication DOIs"
+			join -t "	" -1 1 -2 1 -o 0,2.2 $joined doi.tsv | uniq \
+				> $data_dir/`basename $joined __joined.tsv`__yoctogi_doi.tsv
+
+			echo "     - publication years"
+			join -t "	" -1 1 -2 1 -o 0,2.2 $joined year.tsv | uniq \
+				> $data_dir/`basename $joined __joined.tsv`__yoctogi_year.tsv
+
+			echo "     - publication journals"
+			join -t "	" -1 1 -2 1 -o 0,2.2 $joined journals.tsv | uniq \
+				> $data_dir/`basename $joined __joined.tsv`__yoctogi_journals.tsv
+
+			echo "     - publication PMIDs"
+			join -t "	" -1 1 -2 1 -o 0,2.2 $joined pmid.tsv | uniq \
+				> $data_dir/`basename $joined __joined.tsv`__yoctogi_pmid.tsv
+
 			rm -f $joined.tmp $joined.tmp2
 		done
 	else
+		# NOTE Keeping normalized tables will eventually be faded out.
 		for genes in $data_dir/*__genes_processed.tsv ; do
 			if [ ! -f $genes ] ; then continue ; fi
 
