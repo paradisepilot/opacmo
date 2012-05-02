@@ -15,6 +15,15 @@ opacmo requires [Yoctogi](http://www.yoctogi.org) as backend and uses [bioknack]
 Text-Mining 
 -----------
 
+### Running on a Desktop Computer
+
+Text-mining the complete open access subset of PubMed Central can take a while on a single machine, but it can be done. Supported operating systems are Mac OS X and Linux.
+
+    mkdir opacmo_release ; cd opacmo_release
+    git clone git://github.com/joejimbo/opacmo.git
+    git clone git://github.com/joejimbo/bioknack.git
+    opacmo/make_opacmo.sh all 2>&1 | tee MAKE_OPACMO_LOG
+
 ### Running on a Oracle Grid Engine Cluster
 
 Prepare a 'bundle' on a cluster node with internet access or your desktop computer, which can later be extracted and executed on a [Oracle Grid Engine](http://en.wikipedia.org/wiki/Oracle_Grid_Engine) (former Sun Grid Engine) cluster.
