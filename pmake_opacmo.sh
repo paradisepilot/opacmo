@@ -88,7 +88,7 @@ for batch in batches/* ; do
 	ln -s ../opacmo_data
 
 	echo "Processing in background: batch $batch"
-	if [ "$1" = 'pner' ] ; then
+	if [ "$1" = 'pner' ] || [ "$1" = 'all' ]; then
 		make_opacmo.sh $cmd "`basename $batch`" &> FORK_LOG &
 		sleep 1
 	else
