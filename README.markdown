@@ -5,12 +5,9 @@ opacmo
 
 [opacmo](http://www.opacmo.org) is the Open Access Mortar — a mash-up of biomedical objects linked to the open-access subset of PubMed Central.
 
-Requires the lightweight server [Yoctogi](http://www.yoctogi.org/) for big data as backend.
-
-Text-Mining and Web-Service Set-Up
-==================================
-
-opacmo requires [Yoctogi](http://www.yoctogi.org) as backend and uses [bioknack](https://github.com/joejimbo/bioknack) to create the text mining resources.
+* opacmo is an [interactive web-site](http://www.opacmo.org)
+* opacmo is a web-service with JSON, SPARQL, etc., interfaces powered by [Yoctogi](http://www.yoctogi.org)
+* opacmo is a generic text-mining pipeline that runs on single machines as well as [Oracle Grid Engine](http://en.wikipedia.org/wiki/Oracle_Grid_Engine) clusters.
 
 Text-Mining 
 -----------
@@ -46,8 +43,10 @@ Now transfer the bundle to the cluster, log-in to the cluster, extract the bundl
 
 Specific output of grid engine jobs is written into the respective `fork_*` directories as `opacmo.*.{e,o}*`.
 
-Web-Service Database Set-Up
----------------------------
+Database & Web-Server Set-Up
+----------------------------
+
+### PostgreSQL
 
 Install PostgreSQL 8.3 or newer, then -- on a Debian distro -- do
 
@@ -66,16 +65,14 @@ Install PostgreSQL 8.3 or newer, then -- on a Debian distro -- do
 
 The `load_opacmo.sh` command expects the Yoctogi TSV files that have been generated in the directory `./opacmo_data`.
 
-lighttpd
---------
+### lighttpd
 
 Install and set up lighttpd. opacmo uses Yoctogi as backend, which requires FastCGI support.
 
     sudo apt-get install libfcgi-dev
     sudo gem install ruby-fcgi
 
-Debian 5.0
-----------
+### Workarounds
 
 On Debian 5.0 you have to cheat a little bit to get the FastCGI going.
 
