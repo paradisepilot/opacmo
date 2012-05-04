@@ -349,26 +349,27 @@ if [ "$1" = 'all' ] || [ "$1" = 'yoctogi' ] || [ "$1" = 'sge' ] ; then
 			fi
 
 			echo "   - generating Yoctogi dimension tables"
-
-			echo "     - publication titles"
-			join -t "	" -1 1 -2 1 -o 0,2.2 $joined titles.tsv | uniq \
-				> $data_dir/`basename $joined __joined.tsv`__yoctogi_titles.tsv
-
-			echo "     - publication DOIs"
-			join -t "	" -1 1 -2 1 -o 0,2.2 $joined doi.tsv | uniq \
-				> $data_dir/`basename $joined __joined.tsv`__yoctogi_doi.tsv
-
-			echo "     - publication years"
-			join -t "	" -1 1 -2 1 -o 0,2.2 $joined year.tsv | uniq \
-				> $data_dir/`basename $joined __joined.tsv`__yoctogi_year.tsv
-
-			echo "     - publication journals"
-			join -t "	" -1 1 -2 1 -o 0,2.2 $joined journals.tsv | uniq \
-				> $data_dir/`basename $joined __joined.tsv`__yoctogi_journals.tsv
+# (pmcid VARCHAR(24), pmid VARCHAR(24), doi VARCHAR(1024), pmctitle TEXT, journal TEXT, year VARCHAR(4))
 
 			echo "     - publication PMIDs"
 			join -t "	" -1 1 -2 1 -o 0,2.2 $joined pmid.tsv | uniq \
-				> $data_dir/`basename $joined __joined.tsv`__yoctogi_pmid.tsv
+				> $joined.tmp
+
+			echo "     - publication DOIs"
+			join -t "	" -1 1 -2 1 -o 0,1.2,2.2 $joined.tmp doi.tsv | uniq \
+				> $joined.tmp2
+
+			echo "     - publication titles"
+			join -t "	" -1 1 -2 1 -o 0,1.2,1.3,2.2 $joined.tmp2 titles.tsv | uniq \
+				> $joined.tmp
+
+			echo "     - publication journals"
+			join -t "	" -1 1 -2 1 -o 0,1.2,1.3,1.4,2.2 $joined.tmp journals.tsv | uniq \
+				> $joined.tmp2
+
+			echo "     - publication years"
+			join -t "	" -1 1 -2 1 -o 0,1.2,1.3,1.4,1.5,2.2 $joined.tmp2 year.tsv | uniq \
+				> $data_dir/`basename $joined __joined.tsv`__yoctogi_publications.tsv
 
 			rm -f $joined.tmp $joined.tmp2
 		done

@@ -36,7 +36,7 @@ if [[ "$db" = 'psql' ]] ; then
 	fi
 
 	echo -n "Creating fact table: "
-	psql -c "CREATE TABLE yoctogi (pmcid VARCHAR(24), entrezname VARCHAR(512), entrezid VARCHAR(24), entrezscore INTEGER, speciesname VARCHAR(512), speciesid VARCHAR(24), speciesscore INTEGER, oboname VARCHAR(512), oboid VARCHAR(24), oboscore INTEGER)" yoctogi
+	psql -c "CREATE TABLE yoctogi (pmcid VARCHAR(24), entrezname VARCHAR(512), entrezid VARCHAR(24), entrezscore INTEGER, speciesname VARCHAR(512), speciesid VARCHAR(24), speciesscore INTEGER, goname VARCHAR(512), goid VARCHAR(24), goscore INTEGER, doname VARCHAR(512), doid VARCHAR(24), doscore INTEGER, chebiname VARCHAR(512), chebiid VARCHAR(24), chebiscore INTEGER)" yoctogi
 	echo -n "Creating partitions:"
 	for prefix_0 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
 		for prefix_1 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
@@ -48,14 +48,22 @@ if [[ "$db" = 'psql' ]] ; then
 			psql -c "CREATE TABLE yoctogi__p_speciesname__${prefix_0}${prefix_1} (pmcid VARCHAR(24), speciesname VARCHAR(512), speciesid VARCHAR(24), speciesscore INTEGER)" yoctogi
 			echo -n "  speciesid prefix ${prefix_0}${prefix_1}: "
 			psql -c "CREATE TABLE yoctogi__p_speciesid__${prefix_0}${prefix_1} (pmcid VARCHAR(24), speciesname VARCHAR(512), speciesid VARCHAR(24), speciesscore INTEGER)" yoctogi
-			echo -n "  oboname prefix ${prefix_0}${prefix_1}: "
-			psql -c "CREATE TABLE yoctogi__p_oboname__${prefix_0}${prefix_1} (pmcid VARCHAR(24), oboname VARCHAR(512), oboid VARCHAR(24), oboscore INTEGER)" yoctogi
-			echo -n "  oboid prefix ${prefix_0}${prefix_1}: "
-			psql -c "CREATE TABLE yoctogi__p_oboid__${prefix_0}${prefix_1} (pmcid VARCHAR(24), oboname VARCHAR(512), oboid VARCHAR(24), oboscore INTEGER)" yoctogi
+			echo -n "  goname prefix ${prefix_0}${prefix_1}: "
+			psql -c "CREATE TABLE yoctogi__p_goname__${prefix_0}${prefix_1} (pmcid VARCHAR(24), goname VARCHAR(512), goid VARCHAR(24), goscore INTEGER)" yoctogi
+			echo -n "  goid prefix ${prefix_0}${prefix_1}: "
+			psql -c "CREATE TABLE yoctogi__p_goid__${prefix_0}${prefix_1} (pmcid VARCHAR(24), goname VARCHAR(512), goid VARCHAR(24), goscore INTEGER)" yoctogi
+			echo -n "  doname prefix ${prefix_0}${prefix_1}: "
+			psql -c "CREATE TABLE yoctogi__p_doname__${prefix_0}${prefix_1} (pmcid VARCHAR(24), doname VARCHAR(512), doid VARCHAR(24), doscore INTEGER)" yoctogi
+			echo -n "  doid prefix ${prefix_0}${prefix_1}: "
+			psql -c "CREATE TABLE yoctogi__p_doid__${prefix_0}${prefix_1} (pmcid VARCHAR(24), doname VARCHAR(512), doid VARCHAR(24), doscore INTEGER)" yoctogi
+			echo -n "  chebiname prefix ${prefix_0}${prefix_1}: "
+			psql -c "CREATE TABLE yoctogi__p_chebiname__${prefix_0}${prefix_1} (pmcid VARCHAR(24), chebiname VARCHAR(512), chebiid VARCHAR(24), chebiscore INTEGER)" yoctogi
+			echo -n "  chebiid prefix ${prefix_0}${prefix_1}: "
+			psql -c "CREATE TABLE yoctogi__p_chebiid__${prefix_0}${prefix_1} (pmcid VARCHAR(24), chebiname VARCHAR(512), chebiid VARCHAR(24), chebiscore INTEGER)" yoctogi
 		done
 	done
 
-	psql -c "CREATE TABLE yoctogi_titles (pmcid VARCHAR(24), pmctitle TEXT)" yoctogi
+	psql -c "CREATE TABLE yoctogi_publications (pmcid VARCHAR(24), pmid VARCHAR(24), doi VARCHAR(1024), pmctitle TEXT, journal TEXT, year VARCHAR(4))" yoctogi
 fi
 
 if [[ "$db" = 'psql' ]] ; then
@@ -82,12 +90,16 @@ for tsv in opacmo_data/*__yoctogi*.tsv ; do
 				print "PMC"$1"\t"$2"\t"$3"\t"entrezscore"\t"$5"\t"$6"\t"speciesscore"\t"$8"\t"$9"\t"oboscore;
 			}' $tsv | grep -E '^PMC[0-9]+	' > $table_file
 		cut -f 1 $table_file | sort | uniq | sed '/^$/d' >> opacmo_data/yoctogi__pmcid.tmp
-		cut -f 1,2,3,4 $table_file | sort | uniq | sed '/^PMC[0-9]*			$/d' >> opacmo_data/yoctogi__entrezname.tmp
-		cut -f 1,2,3,4 $table_file | sort | uniq | sed '/^PMC[0-9]*			$/d' >> opacmo_data/yoctogi__entrezid.tmp
-		cut -f 1,5,6,7 $table_file | sort | uniq | sed '/^PMC[0-9]*			$/d' >> opacmo_data/yoctogi__speciesname.tmp
-		cut -f 1,5,6,7 $table_file | sort | uniq | sed '/^PMC[0-9]*			$/d' >> opacmo_data/yoctogi__speciesid.tmp
-		cut -f 1,8,9,10 $table_file | sort | uniq | sed '/^PMC[0-9]*			$/d' >> opacmo_data/yoctogi__oboname.tmp
-		cut -f 1,8,9,10 $table_file | sort | uniq | sed '/^PMC[0-9]*			$/d' >> opacmo_data/yoctogi__oboid.tmp
+		cut -f 1,2,3,4 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]*$/d' >> opacmo_data/yoctogi__entrezname.tmp
+		cut -f 1,2,3,4 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]*$/d' >> opacmo_data/yoctogi__entrezid.tmp
+		cut -f 1,5,6,7 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]*$/d' >> opacmo_data/yoctogi__speciesname.tmp
+		cut -f 1,5,6,7 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]$/d' >> opacmo_data/yoctogi__speciesid.tmp
+		cut -f 1,8,9,10 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]*$/d' >> opacmo_data/yoctogi__goname.tmp
+		cut -f 1,8,9,10 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]*$/d' >> opacmo_data/yoctogi__goid.tmp
+		cut -f 1,11,12,13 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]*$/d' >> opacmo_data/yoctogi__doname.tmp
+		cut -f 1,11,12,13 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]*$/d' >> opacmo_data/yoctogi__doid.tmp
+		cut -f 1,14,15,16 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]*$/d' >> opacmo_data/yoctogi__chebiname.tmp
+		cut -f 1,14,15,16 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]*$/d' >> opacmo_data/yoctogi__chebiid.tmp
 	else
 		awk -F "\t" '{print "PMC"$0}' $tsv > $table_file
 	fi
@@ -124,12 +136,24 @@ if [[ "$db" = 'psql' ]] ; then
 			echo -n "  speciesid prefix ${prefix_0}${prefix_1}: "
 			<opacmo_data/yoctogi__speciesid.tmp grep -i -E "^PMC[0-9]+	[^	]*	${prefix_0}${prefix_1}" | sort | uniq > opacmo_data/partition.tmp
 			psql -c "COPY yoctogi__p_speciesid__${prefix_0}${prefix_1} FROM '`pwd`/opacmo_data/partition.tmp'" yoctogi
-			echo -n "  oboname prefix ${prefix_0}${prefix_1}: "
-			<opacmo_data/yoctogi__oboname.tmp grep -i -E "^PMC[0-9]+	${prefix_0}${prefix_1}" | sort | uniq > opacmo_data/partition.tmp
-			psql -c "COPY yoctogi__p_oboname__${prefix_0}${prefix_1} FROM '`pwd`/opacmo_data/partition.tmp'" yoctogi
-			echo -n "  oboid prefix ${prefix_0}${prefix_1}: "
-			<opacmo_data/yoctogi__oboid.tmp grep -i -E "^PMC[0-9]+	[^	]*	${prefix_0}${prefix_1}" | sort | uniq > opacmo_data/partition.tmp
-			psql -c "COPY yoctogi__p_oboid__${prefix_0}${prefix_1} FROM '`pwd`/opacmo_data/partition.tmp'" yoctogi
+			echo -n "  goname prefix ${prefix_0}${prefix_1}: "
+			<opacmo_data/yoctogi__goname.tmp grep -i -E "^PMC[0-9]+	${prefix_0}${prefix_1}" | sort | uniq > opacmo_data/partition.tmp
+			psql -c "COPY yoctogi__p_goname__${prefix_0}${prefix_1} FROM '`pwd`/opacmo_data/partition.tmp'" yoctogi
+			echo -n "  goid prefix ${prefix_0}${prefix_1}: "
+			<opacmo_data/yoctogi__goid.tmp grep -i -E "^PMC[0-9]+	[^	]*	${prefix_0}${prefix_1}" | sort | uniq > opacmo_data/partition.tmp
+			psql -c "COPY yoctogi__p_goid__${prefix_0}${prefix_1} FROM '`pwd`/opacmo_data/partition.tmp'" yoctogi
+			echo -n "  goname prefix ${prefix_0}${prefix_1}: "
+			<opacmo_data/yoctogi__goname.tmp grep -i -E "^PMC[0-9]+	${prefix_0}${prefix_1}" | sort | uniq > opacmo_data/partition.tmp
+			psql -c "COPY yoctogi__p_goname__${prefix_0}${prefix_1} FROM '`pwd`/opacmo_data/partition.tmp'" yoctogi
+			echo -n "  doid prefix ${prefix_0}${prefix_1}: "
+			<opacmo_data/yoctogi__doid.tmp grep -i -E "^PMC[0-9]+	[^	]*	${prefix_0}${prefix_1}" | sort | uniq > opacmo_data/partition.tmp
+			psql -c "COPY yoctogi__p_doid__${prefix_0}${prefix_1} FROM '`pwd`/opacmo_data/partition.tmp'" yoctogi
+			echo -n "  doname prefix ${prefix_0}${prefix_1}: "
+			<opacmo_data/yoctogi__chebiname.tmp grep -i -E "^PMC[0-9]+	${prefix_0}${prefix_1}" | sort | uniq > opacmo_data/partition.tmp
+			psql -c "COPY yoctogi__p_chebiname__${prefix_0}${prefix_1} FROM '`pwd`/opacmo_data/partition.tmp'" yoctogi
+			echo -n "  goid prefix ${prefix_0}${prefix_1}: "
+			<opacmo_data/yoctogi__chebiid.tmp grep -i -E "^PMC[0-9]+	[^	]*	${prefix_0}${prefix_1}" | sort | uniq > opacmo_data/partition.tmp
+			psql -c "COPY yoctogi__p_chebiid__${prefix_0}${prefix_1} FROM '`pwd`/opacmo_data/partition.tmp'" yoctogi
 
 			rm -f opacmo_data/partition.tmp
 		done
@@ -147,10 +171,18 @@ if [[ "$db" = 'psql' ]] ; then
 			psql -c "CREATE INDEX pmcid_lower__speciesname_${prefix_0}${prefix_1}_idx ON yoctogi__p_speciesname__${prefix_0}${prefix_1} USING btree ((lower(pmcid))) WITH (fillfactor=100)" yoctogi
 			psql -c "CREATE INDEX pmcid__speciesid_${prefix_0}${prefix_1}_idx ON yoctogi__p_speciesid__${prefix_0}${prefix_1} USING btree (pmcid) WITH (fillfactor=100)" yoctogi
 			psql -c "CREATE INDEX pmcid_lower__speciesid_${prefix_0}${prefix_1}_idx ON yoctogi__p_speciesid__${prefix_0}${prefix_1} USING btree ((lower(pmcid))) WITH (fillfactor=100)" yoctogi
-			psql -c "CREATE INDEX pmcid__oboname_${prefix_0}${prefix_1}_idx ON yoctogi__p_speciesname__${prefix_0}${prefix_1} USING btree (pmcid) WITH (fillfactor=100)" yoctogi
-			psql -c "CREATE INDEX pmcid_lower__oboname_${prefix_0}${prefix_1}_idx ON yoctogi__p_oboname__${prefix_0}${prefix_1} USING btree ((lower(pmcid))) WITH (fillfactor=100)" yoctogi
-			psql -c "CREATE INDEX pmcid__oboid_${prefix_0}${prefix_1}_idx ON yoctogi__p_oboid__${prefix_0}${prefix_1} USING btree (pmcid) WITH (fillfactor=100)" yoctogi
-			psql -c "CREATE INDEX pmcid_lower__oboid_${prefix_0}${prefix_1}_idx ON yoctogi__p_oboid__${prefix_0}${prefix_1} USING btree ((lower(pmcid))) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX pmcid__goname_${prefix_0}${prefix_1}_idx ON yoctogi__p_speciesname__${prefix_0}${prefix_1} USING btree (pmcid) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX pmcid_lower__goname_${prefix_0}${prefix_1}_idx ON yoctogi__p_goname__${prefix_0}${prefix_1} USING btree ((lower(pmcid))) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX pmcid__goid_${prefix_0}${prefix_1}_idx ON yoctogi__p_goid__${prefix_0}${prefix_1} USING btree (pmcid) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX pmcid_lower__goid_${prefix_0}${prefix_1}_idx ON yoctogi__p_goid__${prefix_0}${prefix_1} USING btree ((lower(pmcid))) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX pmcid__doname_${prefix_0}${prefix_1}_idx ON yoctogi__p_speciesname__${prefix_0}${prefix_1} USING btree (pmcid) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX pmcid_lower__doname_${prefix_0}${prefix_1}_idx ON yoctogi__p_doname__${prefix_0}${prefix_1} USING btree ((lower(pmcid))) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX pmcid__doid_${prefix_0}${prefix_1}_idx ON yoctogi__p_doid__${prefix_0}${prefix_1} USING btree (pmcid) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX pmcid_lower__doid_${prefix_0}${prefix_1}_idx ON yoctogi__p_doid__${prefix_0}${prefix_1} USING btree ((lower(pmcid))) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX pmcid__chebiname_${prefix_0}${prefix_1}_idx ON yoctogi__p_speciesname__${prefix_0}${prefix_1} USING btree (pmcid) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX pmcid_lower__chebiname_${prefix_0}${prefix_1}_idx ON yoctogi__p_chebiname__${prefix_0}${prefix_1} USING btree ((lower(pmcid))) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX pmcid__chebiid_${prefix_0}${prefix_1}_idx ON yoctogi__p_chebiid__${prefix_0}${prefix_1} USING btree (pmcid) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX pmcid_lower__chebiid_${prefix_0}${prefix_1}_idx ON yoctogi__p_chebiid__${prefix_0}${prefix_1} USING btree ((lower(pmcid))) WITH (fillfactor=100)" yoctogi
 
 			psql -c "CREATE INDEX entrezname__${prefix_0}${prefix_1}_idx ON yoctogi__p_entrezname__${prefix_0}${prefix_1} USING btree (entrezname) WITH (fillfactor=100)" yoctogi
 			psql -c "CREATE INDEX entrezname_lower__${prefix_0}${prefix_1}_idx ON yoctogi__p_entrezname__${prefix_0}${prefix_1} USING btree ((lower(entrezname))) WITH (fillfactor=100)" yoctogi
@@ -160,18 +192,30 @@ if [[ "$db" = 'psql' ]] ; then
 			psql -c "CREATE INDEX speciesname_lower__${prefix_0}${prefix_1}_idx ON yoctogi__p_speciesname__${prefix_0}${prefix_1} USING btree ((lower(speciesname))) WITH (fillfactor=100)" yoctogi
 			psql -c "CREATE INDEX speciesid__${prefix_0}${prefix_1}_idx ON yoctogi__p_speciesid__${prefix_0}${prefix_1} USING btree (speciesid) WITH (fillfactor=100)" yoctogi
 			psql -c "CREATE INDEX speciesid_lower__${prefix_0}${prefix_1}_idx ON yoctogi__p_speciesid__${prefix_0}${prefix_1} USING btree ((lower(speciesid))) WITH (fillfactor=100)" yoctogi
-			psql -c "CREATE INDEX oboname__${prefix_0}${prefix_1}_idx ON yoctogi__p_oboname__${prefix_0}${prefix_1} USING btree (oboname) WITH (fillfactor=100)" yoctogi
-			psql -c "CREATE INDEX oboname_lower__${prefix_0}${prefix_1}_idx ON yoctogi__p_oboname__${prefix_0}${prefix_1} USING btree ((lower(oboname))) WITH (fillfactor=100)" yoctogi
-			psql -c "CREATE INDEX oboid__${prefix_0}${prefix_1}_idx ON yoctogi__p_oboid__${prefix_0}${prefix_1} USING btree (oboid) WITH (fillfactor=100)" yoctogi
-			psql -c "CREATE INDEX oboid_lower__${prefix_0}${prefix_1}_idx ON yoctogi__p_oboid__${prefix_0}${prefix_1} USING btree ((lower(oboid))) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX goname__${prefix_0}${prefix_1}_idx ON yoctogi__p_goname__${prefix_0}${prefix_1} USING btree (goname) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX goname_lower__${prefix_0}${prefix_1}_idx ON yoctogi__p_goname__${prefix_0}${prefix_1} USING btree ((lower(goname))) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX goid__${prefix_0}${prefix_1}_idx ON yoctogi__p_goid__${prefix_0}${prefix_1} USING btree (goid) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX goid_lower__${prefix_0}${prefix_1}_idx ON yoctogi__p_goid__${prefix_0}${prefix_1} USING btree ((lower(goid))) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX doname__${prefix_0}${prefix_1}_idx ON yoctogi__p_doname__${prefix_0}${prefix_1} USING btree (doname) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX doname_lower__${prefix_0}${prefix_1}_idx ON yoctogi__p_doname__${prefix_0}${prefix_1} USING btree ((lower(doname))) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX doid__${prefix_0}${prefix_1}_idx ON yoctogi__p_doid__${prefix_0}${prefix_1} USING btree (doid) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX doid_lower__${prefix_0}${prefix_1}_idx ON yoctogi__p_doid__${prefix_0}${prefix_1} USING btree ((lower(doid))) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX chebiname__${prefix_0}${prefix_1}_idx ON yoctogi__p_chebiname__${prefix_0}${prefix_1} USING btree (chebiname) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX chebiname_lower__${prefix_0}${prefix_1}_idx ON yoctogi__p_chebiname__${prefix_0}${prefix_1} USING btree ((lower(chebiname))) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX chebiid__${prefix_0}${prefix_1}_idx ON yoctogi__p_oboid__${prefix_0}${prefix_1} USING btree (oboid) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX chebiid_lower__${prefix_0}${prefix_1}_idx ON yoctogi__p_oboid__${prefix_0}${prefix_1} USING btree ((lower(oboid))) WITH (fillfactor=100)" yoctogi
 
 			echo "Optimizing partition indexes"
 			psql -c "ANALYZE yoctogi__p_entrezname__${prefix_0}${prefix_1}" yoctogi
 			psql -c "ANALYZE yoctogi__p_entrezid__${prefix_0}${prefix_1}" yoctogi
 			psql -c "ANALYZE yoctogi__p_speciesname__${prefix_0}${prefix_1}" yoctogi
 			psql -c "ANALYZE yoctogi__p_speciesid__${prefix_0}${prefix_1}" yoctogi
-			psql -c "ANALYZE yoctogi__p_oboname__${prefix_0}${prefix_1}" yoctogi
-			psql -c "ANALYZE yoctogi__p_oboid__${prefix_0}${prefix_1}" yoctogi
+			psql -c "ANALYZE yoctogi__p_goname__${prefix_0}${prefix_1}" yoctogi
+			psql -c "ANALYZE yoctogi__p_goid__${prefix_0}${prefix_1}" yoctogi
+			psql -c "ANALYZE yoctogi__p_doname__${prefix_0}${prefix_1}" yoctogi
+			psql -c "ANALYZE yoctogi__p_doid__${prefix_0}${prefix_1}" yoctogi
+			psql -c "ANALYZE yoctogi__p_chebiname__${prefix_0}${prefix_1}" yoctogi
+			psql -c "ANALYZE yoctogi__p_chebiid__${prefix_0}${prefix_1}" yoctogi
 		done
 	done
 
@@ -182,8 +226,8 @@ if [[ "$db" = 'psql' ]] ; then
 	echo "Optimizing indexes"
 	psql -c "ANALYZE yoctogi" yoctogi
 
-	echo "Indexing dimension table of titles"
-	psql -c "CREATE INDEX titles_pmcid__idx ON yoctogi_titles USING btree (pmcid) WITH (fillfactor=100)" yoctogi
+	echo "Indexing dimension table of publications"
+	psql -c "CREATE INDEX publications_pmcid__idx ON yoctogi_publications USING btree (pmcid) WITH (fillfactor=100)" yoctogi
 fi
 
 if [[ "$db" = 'psql' ]] ; then
@@ -192,15 +236,19 @@ fi
 
 if [[ "$db" = 'psql' ]] ; then
 	psql -c 'GRANT SELECT ON yoctogi TO yoctogi' yoctogi
-	psql -c 'GRANT SELECT ON yoctogi_titles TO yoctogi' yoctogi
+	psql -c 'GRANT SELECT ON yoctogi_publications TO yoctogi' yoctogi
 	for prefix_0 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
 		for prefix_1 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
 			psql -c "GRANT SELECT ON yoctogi__p_entrezname__${prefix_0}${prefix_1} TO yoctogi" yoctogi
 			psql -c "GRANT SELECT ON yoctogi__p_entrezid__${prefix_0}${prefix_1} TO yoctogi" yoctogi
 			psql -c "GRANT SELECT ON yoctogi__p_speciesname__${prefix_0}${prefix_1} TO yoctogi" yoctogi
 			psql -c "GRANT SELECT ON yoctogi__p_speciesid__${prefix_0}${prefix_1} TO yoctogi" yoctogi
-			psql -c "GRANT SELECT ON yoctogi__p_oboname__${prefix_0}${prefix_1} TO yoctogi" yoctogi
-			psql -c "GRANT SELECT ON yoctogi__p_oboid__${prefix_0}${prefix_1} TO yoctogi" yoctogi
+			psql -c "GRANT SELECT ON yoctogi__p_goname__${prefix_0}${prefix_1} TO yoctogi" yoctogi
+			psql -c "GRANT SELECT ON yoctogi__p_goid__${prefix_0}${prefix_1} TO yoctogi" yoctogi
+			psql -c "GRANT SELECT ON yoctogi__p_doname__${prefix_0}${prefix_1} TO yoctogi" yoctogi
+			psql -c "GRANT SELECT ON yoctogi__p_doid__${prefix_0}${prefix_1} TO yoctogi" yoctogi
+			psql -c "GRANT SELECT ON yoctogi__p_chebiname__${prefix_0}${prefix_1} TO yoctogi" yoctogi
+			psql -c "GRANT SELECT ON yoctogi__p_chebiid__${prefix_0}${prefix_1} TO yoctogi" yoctogi
 		done
 	done
 
