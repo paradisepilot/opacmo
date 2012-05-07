@@ -10,6 +10,8 @@
 
 var updateInProgress = false;
 
+var yoctogiBaseURI = 'http://localhost/yoctogi.fcgi';
+
 var aboutSlider = null;
 var aboutSwitch = new Element('div#aboutswitch', { 'class': 'headerbutton' } );
 var releaseSlider = null;
@@ -76,7 +78,7 @@ var type2Name = {
 };
 
 var suggestionRequest = new Request.JSON({
-		url: 'http://www.opacmo.org/yoctogi.fcgi',
+		url: yoctogiBaseURI,
 		link: 'cancel',
 		onSuccess: function(response) {
 			suggestionSpinner.hide();
@@ -112,7 +114,7 @@ var suggestionRequest = new Request.JSON({
 	});
 
 var resultRequest = new Request.JSON({
-		url: 'http://www.opacmo.org/yoctogi.fcgi',
+		url: yoctogiBaseURI,
 		link: 'cancel',
 		onSuccess: function(response) {
 			resultSpinner.hide();
@@ -237,6 +239,21 @@ var resultRequest = new Request.JSON({
 
 			if (response.count == 0)
 				noResultsMessage.inject($('resultcontainer'));
+		}
+	});
+
+var springerRequest = new Request.JSON({
+		url: yoctogiBaseURI,
+		method: 'get',
+		link: 'cancel',
+		onSuccess: function(response) {
+			suggestionSpinner.hide();
+
+			if (response.error) {
+				// TODO
+				alert(response['message']);
+				return;
+			}
 		}
 	});
 
@@ -482,6 +499,9 @@ function processQuery() {
 
 	suggestionSpinner.show();
 	suggestionRequest.send(JSON.encode(yoctogiRequest));
+
+	if ($('optionSpringer').checked)
+		springerRequest.send('SPRINGER=' + query);
 }
 
 function runConjunctiveQuery(format) {

@@ -8,6 +8,7 @@
 		<link rel="stylesheet" href="spinner.css" type="text/css" />
 		<script type="text/javascript" src="mootools-core-1.4.1.js"></script>
 		<script type="text/javascript" src="mootools-more-1.4.0.1.js"></script>
+		<script type="text/javascript" src="d3.v2.js"></script>
 		<script type="text/javascript" src="mortar.js"></script>
 	</head>
 	<body>
@@ -31,6 +32,12 @@
 			<div id="logo"><img src="images/opacmo120inv.png" alt="opacmo logo" /></div>
 			<div id="options">
 				<ul class="inputs-list">
+					<li>
+						<label>
+							<input type="checkbox" id="optionSpringer" name="optionSpringer" value="optionSpringer" checked />
+							<span id="optionSpringerLabel">Springer API Challenge 2.0</span>
+						</label>
+					</li>
 					<li>
 						<label>
 							<input type="checkbox" id="optionHelpMessages" name="optionHelpMessages" value="optionHelpMessages" checked />
@@ -88,6 +95,9 @@
 				<div class="stagesuggestions">
 					<div id="suggestioncontainer"></div>
 				</div>
+			</div>
+			<div class="row">
+				<svg class="chart" width="100" height="100"></svg>
 			</div>
 			<div id="help2" class="helpbar"><div class="helpitem"><img src="images/cyan/lightbulb_15x24.png"></img></div><div class="helpitem">Now you are presented with a list of publications and their linked genes, proteins, species, diseases, etc. that fit the selected terms above. <b>Enter another term in the text field to narrow down your search further.</b> The terms that you select on top of the current selection will be added to this query conjunctively. You can remove terms from the search by clicking the close button on top of the category in the previous step.</div></div>
 			<div class="spinner"><div id="resultspinner"></div></div>
