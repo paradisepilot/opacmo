@@ -61,14 +61,17 @@ body {
 #query {
 	font-family: 'Arimo', helvetica;
 	font-size: 20px;
-	height: 27px;
-	width: 90%;
+	height: 29px;
+	width: 100%;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
 }
 
 .overTxtLabel {
 	font-family: 'Arimo', helvetica;
     	font-size: 20px;
-	height: 27px;
+	height: 29px;
 	color: #aaaaaa;
 	font-style: italic;
 	text-align: left;
