@@ -2,6 +2,33 @@
 
 db='psql'
 
+fact_table=yoctogi
+pmid_length=24
+
+REPLACE=
+
+usage() {
+	echo "Usage: load_opacmo.sh [parameters]"
+	echo "Parameters:"
+	echo "  -replace : replaces tables that already exist in the database"
+	echo "             (default behaviour is to check and stop the script"
+	echo "             when tables in the database exist already)"
+}
+
+while [[ $# -gt 0 ]] ; do
+	case $1 in
+	-replace)
+		REPLACE=-replace
+	;;
+	*)
+		usage
+		exit 1
+	;;
+	esac
+
+	shift
+done
+
 touch opacmo_data/WRITE_TEST
 if [[ $? -ne 0 ]] ; then
 	echo "No write permissions to 'opacmo_data'. Please"
@@ -27,43 +54,43 @@ if [[ "$db" = 'psql' ]] ; then
 
 	tables_in_yoctogi=`psql -c '\dp' yoctogi | tail -n 2 | tr -d '\n' | grep -o -E '[0-9]+'`
 
-	if [[ $tables_in_yoctogi -gt 0 ]] ; then
+	if [[ $tables_in_yoctogi -gt 0 ]] && [[ "$REPLACE" = "" ]]; then
 		echo "There are already tables in the 'yoctogi' database."
 		echo ""
-		echo "Make sure you know what you are doing and remove this"
-		echo "test from the script. Don't come crying afterwards though."
+		echo "If you know what you are doing, add the '-replace'"
+		echo "parameter. Don't come crying afterwards though."
 		exit 1
 	fi
 
 	echo -n "Creating fact table: "
-	psql -c "CREATE TABLE yoctogi (pmcid VARCHAR(24), entrezname VARCHAR(512), entrezid VARCHAR(24), entrezscore INTEGER, speciesname VARCHAR(512), speciesid VARCHAR(24), speciesscore INTEGER, goname VARCHAR(512), goid VARCHAR(24), goscore INTEGER, doname VARCHAR(512), doid VARCHAR(24), doscore INTEGER, chebiname VARCHAR(512), chebiid VARCHAR(24), chebiscore INTEGER)" yoctogi
+	psql -c "DROP TABLE IF EXISTS $fact_table ; CREATE TABLE $fact_table (pmcid VARCHAR(24), entrezname VARCHAR(512), entrezid VARCHAR(24), entrezscore INTEGER, speciesname VARCHAR(512), speciesid VARCHAR(24), speciesscore INTEGER, goname VARCHAR(512), goid VARCHAR(24), goscore INTEGER, doname VARCHAR(512), doid VARCHAR(24), doscore INTEGER, chebiname VARCHAR(512), chebiid VARCHAR(24), chebiscore INTEGER)" yoctogi
 	echo -n "Creating partitions:"
 	for prefix_0 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
 		for prefix_1 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
 			echo -n "  entrezname prefix ${prefix_0}${prefix_1}: "
-			psql -c "CREATE TABLE yoctogi__p_entrezname__${prefix_0}${prefix_1} (pmcid VARCHAR(24), entrezname VARCHAR(512), entrezid VARCHAR(24), entrezscore INTEGER)" yoctogi
+			psql -c "DROP TABLE IF EXISTS yoctogi__p_entrezname__${prefix_0}${prefix_1} ; CREATE TABLE yoctogi__p_entrezname__${prefix_0}${prefix_1} (pmcid VARCHAR(24), entrezname VARCHAR(512), entrezid VARCHAR(24), entrezscore INTEGER)" yoctogi
 			echo -n "  entrezid prefix ${prefix_0}${prefix_1}: "
-			psql -c "CREATE TABLE yoctogi__p_entrezid__${prefix_0}${prefix_1} (pmcid VARCHAR(24), entrezname VARCHAR(512), entrezid VARCHAR(24), entrezscore INTEGER)" yoctogi
+			psql -c "DROP TABLE IF EXISTS yoctogi__p_entrezid__${prefix_0}${prefix_1} ; CREATE TABLE yoctogi__p_entrezid__${prefix_0}${prefix_1} (pmcid VARCHAR(24), entrezname VARCHAR(512), entrezid VARCHAR(24), entrezscore INTEGER)" yoctogi
 			echo -n "  speciesname prefix ${prefix_0}${prefix_1}: "
-			psql -c "CREATE TABLE yoctogi__p_speciesname__${prefix_0}${prefix_1} (pmcid VARCHAR(24), speciesname VARCHAR(512), speciesid VARCHAR(24), speciesscore INTEGER)" yoctogi
+			psql -c "DROP TABLE IF EXISTS yoctogi__p_speciesname__${prefix_0}${prefix_1} ; CREATE TABLE yoctogi__p_speciesname__${prefix_0}${prefix_1} (pmcid VARCHAR(24), speciesname VARCHAR(512), speciesid VARCHAR(24), speciesscore INTEGER)" yoctogi
 			echo -n "  speciesid prefix ${prefix_0}${prefix_1}: "
-			psql -c "CREATE TABLE yoctogi__p_speciesid__${prefix_0}${prefix_1} (pmcid VARCHAR(24), speciesname VARCHAR(512), speciesid VARCHAR(24), speciesscore INTEGER)" yoctogi
+			psql -c "DROP TABLE IF EXISTS yoctogi__p_speciesid__${prefix_0}${prefix_1} ; CREATE TABLE yoctogi__p_speciesid__${prefix_0}${prefix_1} (pmcid VARCHAR(24), speciesname VARCHAR(512), speciesid VARCHAR(24), speciesscore INTEGER)" yoctogi
 			echo -n "  goname prefix ${prefix_0}${prefix_1}: "
-			psql -c "CREATE TABLE yoctogi__p_goname__${prefix_0}${prefix_1} (pmcid VARCHAR(24), goname VARCHAR(512), goid VARCHAR(24), goscore INTEGER)" yoctogi
+			psql -c "DROP TABLE IF EXISTS yoctogi__p_goname__${prefix_0}${prefix_1} ; CREATE TABLE yoctogi__p_goname__${prefix_0}${prefix_1} (pmcid VARCHAR(24), goname VARCHAR(512), goid VARCHAR(24), goscore INTEGER)" yoctogi
 			echo -n "  goid prefix ${prefix_0}${prefix_1}: "
-			psql -c "CREATE TABLE yoctogi__p_goid__${prefix_0}${prefix_1} (pmcid VARCHAR(24), goname VARCHAR(512), goid VARCHAR(24), goscore INTEGER)" yoctogi
+			psql -c "DROP TABLE IF EXISTS yoctogi__p_goid__${prefix_0}${prefix_1} ; CREATE TABLE yoctogi__p_goid__${prefix_0}${prefix_1} (pmcid VARCHAR(24), goname VARCHAR(512), goid VARCHAR(24), goscore INTEGER)" yoctogi
 			echo -n "  doname prefix ${prefix_0}${prefix_1}: "
-			psql -c "CREATE TABLE yoctogi__p_doname__${prefix_0}${prefix_1} (pmcid VARCHAR(24), doname VARCHAR(512), doid VARCHAR(24), doscore INTEGER)" yoctogi
+			psql -c "DROP TABLE IF EXISTS yoctogi__p_doname__${prefix_0}${prefix_1} ; CREATE TABLE yoctogi__p_doname__${prefix_0}${prefix_1} (pmcid VARCHAR(24), doname VARCHAR(512), doid VARCHAR(24), doscore INTEGER)" yoctogi
 			echo -n "  doid prefix ${prefix_0}${prefix_1}: "
-			psql -c "CREATE TABLE yoctogi__p_doid__${prefix_0}${prefix_1} (pmcid VARCHAR(24), doname VARCHAR(512), doid VARCHAR(24), doscore INTEGER)" yoctogi
+			psql -c "DROP TABLE IF EXISTS yoctogi__p_doid__${prefix_0}${prefix_1} ; CREATE TABLE yoctogi__p_doid__${prefix_0}${prefix_1} (pmcid VARCHAR(24), doname VARCHAR(512), doid VARCHAR(24), doscore INTEGER)" yoctogi
 			echo -n "  chebiname prefix ${prefix_0}${prefix_1}: "
-			psql -c "CREATE TABLE yoctogi__p_chebiname__${prefix_0}${prefix_1} (pmcid VARCHAR(24), chebiname VARCHAR(512), chebiid VARCHAR(24), chebiscore INTEGER)" yoctogi
+			psql -c "DROP TABLE IF EXISTS yoctogi__p_chebiname__${prefix_0}${prefix_1} ; CREATE TABLE yoctogi__p_chebiname__${prefix_0}${prefix_1} (pmcid VARCHAR(24), chebiname VARCHAR(512), chebiid VARCHAR(24), chebiscore INTEGER)" yoctogi
 			echo -n "  chebiid prefix ${prefix_0}${prefix_1}: "
-			psql -c "CREATE TABLE yoctogi__p_chebiid__${prefix_0}${prefix_1} (pmcid VARCHAR(24), chebiname VARCHAR(512), chebiid VARCHAR(24), chebiscore INTEGER)" yoctogi
+			psql -c "DROP TABLE IF EXISTS yoctogi__p_chebiid__${prefix_0}${prefix_1} ; CREATE TABLE yoctogi__p_chebiid__${prefix_0}${prefix_1} (pmcid VARCHAR(24), chebiname VARCHAR(512), chebiid VARCHAR(24), chebiscore INTEGER)" yoctogi
 		done
 	done
 
-	psql -c "CREATE TABLE yoctogi_publications (pmcid VARCHAR(24), pmid VARCHAR(24), doi VARCHAR(1024), pmctitle TEXT, journal TEXT, year VARCHAR(4))" yoctogi
+	psql -c "DROP TABLE IF EXISTS ${fact_table}_publications ; CREATE TABLE ${fact_table}_publications (pmcid VARCHAR(24), pmid VARCHAR($pmid_length), doi VARCHAR(1024), pmctitle TEXT, journal TEXT, year VARCHAR(4))" yoctogi
 fi
 
 if [[ "$db" = 'psql' ]] ; then
@@ -83,11 +110,15 @@ for tsv in opacmo_data/*__yoctogi*.tsv ; do
 		awk -F "\t" '{
 				entrezscore=$4;
 				speciesscore=$7;
-				oboscore=$10;
+				goscore=$10;
+				doscore=$13;
+				chebiscore=$16;
 				if (entrezscore == "") { entrezscore='0' };
 				if (speciesscore == "") { speciesscore='0' };
-				if (oboscore == "") { oboscore='0' };
-				print "PMC"$1"\t"$2"\t"$3"\t"entrezscore"\t"$5"\t"$6"\t"speciesscore"\t"$8"\t"$9"\t"oboscore;
+				if (goscore == "") { goscore='0' };
+				if (doscore == "") { doscore='0' };
+				if (chebiscore == "") { chebiscore='0' };
+				print "PMC"$1"\t"$2"\t"$3"\t"entrezscore"\t"$5"\t"$6"\t"speciesscore"\t"$8"\t"$9"\t"goscore"\t"$11"\t"$12"\t"doscore"\t"$14"\t"$15"\t"chebiscore;
 			}' $tsv | grep -E '^PMC[0-9]+	' > $table_file
 		cut -f 1 $table_file | sort | uniq | sed '/^$/d' >> opacmo_data/yoctogi__pmcid.tmp
 		cut -f 1,2,3,4 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]*$/d' >> opacmo_data/yoctogi__entrezname.tmp
@@ -120,8 +151,6 @@ for tsv in opacmo_data/*__yoctogi*.tsv ; do
 done
 
 if [[ "$db" = 'psql' ]] ; then
-	psql -c "COPY yoctogi FROM '`pwd`/opacmo_data/yoctogi__pmcid.tmp'" yoctogi
-
 	for prefix_0 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
 		for prefix_1 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
 			echo -n "  entrezname prefix ${prefix_0}${prefix_1}: "
@@ -202,8 +231,8 @@ if [[ "$db" = 'psql' ]] ; then
 			psql -c "CREATE INDEX doid_lower__${prefix_0}${prefix_1}_idx ON yoctogi__p_doid__${prefix_0}${prefix_1} USING btree ((lower(doid))) WITH (fillfactor=100)" yoctogi
 			psql -c "CREATE INDEX chebiname__${prefix_0}${prefix_1}_idx ON yoctogi__p_chebiname__${prefix_0}${prefix_1} USING btree (chebiname) WITH (fillfactor=100)" yoctogi
 			psql -c "CREATE INDEX chebiname_lower__${prefix_0}${prefix_1}_idx ON yoctogi__p_chebiname__${prefix_0}${prefix_1} USING btree ((lower(chebiname))) WITH (fillfactor=100)" yoctogi
-			psql -c "CREATE INDEX chebiid__${prefix_0}${prefix_1}_idx ON yoctogi__p_oboid__${prefix_0}${prefix_1} USING btree (oboid) WITH (fillfactor=100)" yoctogi
-			psql -c "CREATE INDEX chebiid_lower__${prefix_0}${prefix_1}_idx ON yoctogi__p_oboid__${prefix_0}${prefix_1} USING btree ((lower(oboid))) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX chebiid__${prefix_0}${prefix_1}_idx ON yoctogi__p_chebiid__${prefix_0}${prefix_1} USING btree (chebiid) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX chebiid_lower__${prefix_0}${prefix_1}_idx ON yoctogi__p_chebiid__${prefix_0}${prefix_1} USING btree ((lower(chebiid))) WITH (fillfactor=100)" yoctogi
 
 			echo "Optimizing partition indexes"
 			psql -c "ANALYZE yoctogi__p_entrezname__${prefix_0}${prefix_1}" yoctogi

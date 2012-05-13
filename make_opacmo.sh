@@ -193,14 +193,18 @@ if [ "$1" = 'all' ] || [ "$1" = 'ner' ] || [ "$1" = 'pner' ] || [ "$1" = 'sge' ]
 
 			if [ ! -f genes.tsv ] ; then touch genes.tsv ; fi
 			if [ ! -f species.tsv ] ; then touch species.tsv ; fi
-			if [ ! -f terms.tsv ] ; then touch terms.tsv ; fi
+			if [ ! -f terms_go.tsv ] ; then touch terms_go.tsv ; fi
+			if [ ! -f terms_do.tsv ] ; then touch terms_do.tsv ; fi
+			if [ ! -f terms_chebi.tsv ] ; then touch terms_chebi.tsv ; fi
 
 			journal_name=`basename "$journal_dir"`
 			cp genes.tsv "opacmo_data/${journal_name}__genes.tsv"
 			cp species.tsv "opacmo_data/${journal_name}__species.tsv"
-			cp terms.tsv "opacmo_data/${journal_name}__terms.tsv"
+			cp terms_go.tsv "opacmo_data/${journal_name}__terms_go.tsv"
+			cp terms_do.tsv "opacmo_data/${journal_name}__terms_do.tsv"
+			cp terms_chebi.tsv "opacmo_data/${journal_name}__terms_chebi.tsv"
 
-			rm -f genes.tsv species.tsv terms.tsv
+			rm -f genes.tsv species.tsv terms_*.tsv
 		done
 		rm -f STATE_NER
 	else
