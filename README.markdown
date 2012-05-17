@@ -41,7 +41,9 @@ Now transfer the bundle to the cluster, log-in to the cluster, extract the bundl
     screen -DR opacmo_release
     opacmo/make_opacmo.sh sge 2>&1 | tee MAKE_OPACMO_CLUSTER_LOG
 
-Specific output of grid engine jobs is written into the respective `fork_*` directories as `opacmo.*.{e,o}*`.
+Running `opacmo/make_opacmo.sh sge` requires up to 8GB memory for postprocessing tasks. It might be necessary to request this amount of memory explicitly on your cluster by logging in to a node with `qrsh -l h_vmem=8GB`.
+
+Specific output of grid engine jobs is written into the respective `fork_*` directories as `opacmo.*.{e,o}*`. The actual text-mining output is written into the directory `opacmo_data`.
 
 Database & Web-Server Set-Up
 ----------------------------

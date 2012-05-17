@@ -62,11 +62,14 @@ if [[ "$db" = 'psql' ]] ; then
 		exit 1
 	fi
 
-	echo -n "Creating fact table: "
-	psql -c "DROP TABLE IF EXISTS $fact_table ; CREATE TABLE $fact_table (pmcid VARCHAR(24), entrezname VARCHAR(512), entrezid VARCHAR(24), entrezscore INTEGER, speciesname VARCHAR(512), speciesid VARCHAR(24), speciesscore INTEGER, goname VARCHAR(512), goid VARCHAR(24), goscore INTEGER, doname VARCHAR(512), doid VARCHAR(24), doscore INTEGER, chebiname VARCHAR(512), chebiid VARCHAR(24), chebiscore INTEGER)" yoctogi
+	# That is right: no more fact table. Everything is kept in partitions for opacmo.
+	# echo -n "Creating fact table: "
+	# psql -c "DROP TABLE IF EXISTS $fact_table ; CREATE TABLE $fact_table (pmcid VARCHAR(24), entrezname VARCHAR(512), entrezid VARCHAR(24), entrezscore INTEGER, speciesname VARCHAR(512), speciesid VARCHAR(24), speciesscore INTEGER, goname VARCHAR(512), goid VARCHAR(24), goscore INTEGER, doname VARCHAR(512), doid VARCHAR(24), doscore INTEGER, chebiname VARCHAR(512), chebiid VARCHAR(24), chebiscore INTEGER)" yoctogi
 	echo -n "Creating partitions:"
 	for prefix_0 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
 		for prefix_1 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
+			echo -n "  pmcid prefix ${prefix_0}${prefix_1}: "
+			psql -c "DROP TABLE IF EXISTS yoctogi__p_pmcid__${prefix_0}${prefix_1} ; CREATE TABLE yoctogi__p_pmcid__${prefix_0}${prefix_1} (pmcid VARCHAR(24))" yoctogi
 			echo -n "  entrezname prefix ${prefix_0}${prefix_1}: "
 			psql -c "DROP TABLE IF EXISTS yoctogi__p_entrezname__${prefix_0}${prefix_1} ; CREATE TABLE yoctogi__p_entrezname__${prefix_0}${prefix_1} (pmcid VARCHAR(24), entrezname VARCHAR(512), entrezid VARCHAR(24), entrezscore INTEGER)" yoctogi
 			echo -n "  entrezid prefix ${prefix_0}${prefix_1}: "
@@ -105,7 +108,7 @@ for tsv in opacmo_data/*__yoctogi*.tsv ; do
 
 	echo " - processing `basename "$tsv"`"
 
-	# If we see the main table, then make sure that all scores are integers.
+	# If we see the fact table, then make sure that all scores are integers.
 	if [[ "$table" = 'yoctogi' ]] ; then
 		awk -F "\t" '{
 				entrezscore=$4;
@@ -133,17 +136,19 @@ for tsv in opacmo_data/*__yoctogi*.tsv ; do
 		cut -f 1,14,15,16 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]*$/d' >> opacmo_data/yoctogi__chebiid.tmp
 	else
 		awk -F "\t" '{print "PMC"$0}' $tsv > $table_file
-	fi
 
-	if [[ "$db" = 'psql' ]] ; then
-		psql -c "COPY $table FROM '`pwd`/$table_file'" yoctogi
-	fi
+		# Only load dimension tables. The fact tables is only loaded in partitions:
 
-	if [[ "$db" = 'mongo' ]] ; then
-		if [[ "$table" = 'yoctogi' ]] ; then
-			mongoimport --type tsv -d yoctogi -c "$table" -f pmcid,entrezname,entrezid,entrezscore,speciesname,speciesid,speciesscore,oboname,oboid,oboscore,entrezname_lowercase,oboname_lowercase `pwd`/$table_file
-		else
-			mongoimport --type tsv -d yoctogi -c "$table" -f pmcid,pmctitle `pwd`/$table_file
+		if [[ "$db" = 'psql' ]] ; then
+			psql -c "COPY $table FROM '`pwd`/$table_file'" yoctogi
+		fi
+
+		if [[ "$db" = 'mongo' ]] ; then
+			if [[ "$table" = 'yoctogi' ]] ; then
+				mongoimport --type tsv -d yoctogi -c "$table" -f pmcid,entrezname,entrezid,entrezscore,speciesname,speciesid,speciesscore,oboname,oboid,oboscore,entrezname_lowercase,oboname_lowercase `pwd`/$table_file
+			else
+				mongoimport --type tsv -d yoctogi -c "$table" -f pmcid,pmctitle `pwd`/$table_file
+			fi
 		fi
 	fi
 
@@ -153,6 +158,9 @@ done
 if [[ "$db" = 'psql' ]] ; then
 	for prefix_0 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
 		for prefix_1 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
+			echo -n "  pmcid prefix ${prefix_0}${prefix_1}: "
+			<opacmo_data/yoctogi__pmcid.tmp grep -i -E "^${prefix_0}${prefix_1}" | sort | uniq > opacmo_data/partition.tmp
+			psql -c "COPY yoctogi__p_pmcid__${prefix_0}${prefix_1} FROM '`pwd`/opacmo_data/partition.tmp'" yoctogi
 			echo -n "  entrezname prefix ${prefix_0}${prefix_1}: "
 			<opacmo_data/yoctogi__entrezname.tmp grep -i -E "^PMC[0-9]+	${prefix_0}${prefix_1}" | sort | uniq > opacmo_data/partition.tmp
 			psql -c "COPY yoctogi__p_entrezname__${prefix_0}${prefix_1} FROM '`pwd`/opacmo_data/partition.tmp'" yoctogi
@@ -171,16 +179,16 @@ if [[ "$db" = 'psql' ]] ; then
 			echo -n "  goid prefix ${prefix_0}${prefix_1}: "
 			<opacmo_data/yoctogi__goid.tmp grep -i -E "^PMC[0-9]+	[^	]*	${prefix_0}${prefix_1}" | sort | uniq > opacmo_data/partition.tmp
 			psql -c "COPY yoctogi__p_goid__${prefix_0}${prefix_1} FROM '`pwd`/opacmo_data/partition.tmp'" yoctogi
-			echo -n "  goname prefix ${prefix_0}${prefix_1}: "
-			<opacmo_data/yoctogi__goname.tmp grep -i -E "^PMC[0-9]+	${prefix_0}${prefix_1}" | sort | uniq > opacmo_data/partition.tmp
-			psql -c "COPY yoctogi__p_goname__${prefix_0}${prefix_1} FROM '`pwd`/opacmo_data/partition.tmp'" yoctogi
+			echo -n "  doname prefix ${prefix_0}${prefix_1}: "
+			<opacmo_data/yoctogi__doname.tmp grep -i -E "^PMC[0-9]+	${prefix_0}${prefix_1}" | sort | uniq > opacmo_data/partition.tmp
+			psql -c "COPY yoctogi__p_doname__${prefix_0}${prefix_1} FROM '`pwd`/opacmo_data/partition.tmp'" yoctogi
 			echo -n "  doid prefix ${prefix_0}${prefix_1}: "
 			<opacmo_data/yoctogi__doid.tmp grep -i -E "^PMC[0-9]+	[^	]*	${prefix_0}${prefix_1}" | sort | uniq > opacmo_data/partition.tmp
 			psql -c "COPY yoctogi__p_doid__${prefix_0}${prefix_1} FROM '`pwd`/opacmo_data/partition.tmp'" yoctogi
-			echo -n "  doname prefix ${prefix_0}${prefix_1}: "
+			echo -n "  chebiname prefix ${prefix_0}${prefix_1}: "
 			<opacmo_data/yoctogi__chebiname.tmp grep -i -E "^PMC[0-9]+	${prefix_0}${prefix_1}" | sort | uniq > opacmo_data/partition.tmp
 			psql -c "COPY yoctogi__p_chebiname__${prefix_0}${prefix_1} FROM '`pwd`/opacmo_data/partition.tmp'" yoctogi
-			echo -n "  goid prefix ${prefix_0}${prefix_1}: "
+			echo -n "  chebiid prefix ${prefix_0}${prefix_1}: "
 			<opacmo_data/yoctogi__chebiid.tmp grep -i -E "^PMC[0-9]+	[^	]*	${prefix_0}${prefix_1}" | sort | uniq > opacmo_data/partition.tmp
 			psql -c "COPY yoctogi__p_chebiid__${prefix_0}${prefix_1} FROM '`pwd`/opacmo_data/partition.tmp'" yoctogi
 
@@ -192,6 +200,8 @@ if [[ "$db" = 'psql' ]] ; then
 		for prefix_1 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
 			echo "Indexing partitions: ${prefix_0}${prefix_1}"
 
+			psql -c "CREATE INDEX pmcid__pmcid_${prefix_0}${prefix_1}_idx ON yoctogi__p_pmcid__${prefix_0}${prefix_1} USING btree (pmcid) WITH (fillfactor=100)" yoctogi
+			psql -c "CREATE INDEX pmcid_lower__pmcid_${prefix_0}${prefix_1}_idx ON yoctogi__p_pmcid__${prefix_0}${prefix_1} USING btree ((lower(pmcid))) WITH (fillfactor=100)" yoctogi
 			psql -c "CREATE INDEX pmcid__entrezname_${prefix_0}${prefix_1}_idx ON yoctogi__p_entrezname__${prefix_0}${prefix_1} USING btree (pmcid) WITH (fillfactor=100)" yoctogi
 			psql -c "CREATE INDEX pmcid_lower__entrezname_${prefix_0}${prefix_1}_idx ON yoctogi__p_entrezname__${prefix_0}${prefix_1} USING btree ((lower(pmcid))) WITH (fillfactor=100)" yoctogi
 			psql -c "CREATE INDEX pmcid__entrezid_${prefix_0}${prefix_1}_idx ON yoctogi__p_entrezid__${prefix_0}${prefix_1} USING btree (pmcid) WITH (fillfactor=100)" yoctogi
@@ -235,6 +245,7 @@ if [[ "$db" = 'psql' ]] ; then
 			psql -c "CREATE INDEX chebiid_lower__${prefix_0}${prefix_1}_idx ON yoctogi__p_chebiid__${prefix_0}${prefix_1} USING btree ((lower(chebiid))) WITH (fillfactor=100)" yoctogi
 
 			echo "Optimizing partition indexes"
+			psql -c "ANALYZE yoctogi__p_pmcid__${prefix_0}${prefix_1}" yoctogi
 			psql -c "ANALYZE yoctogi__p_entrezname__${prefix_0}${prefix_1}" yoctogi
 			psql -c "ANALYZE yoctogi__p_entrezid__${prefix_0}${prefix_1}" yoctogi
 			psql -c "ANALYZE yoctogi__p_speciesname__${prefix_0}${prefix_1}" yoctogi
@@ -248,12 +259,14 @@ if [[ "$db" = 'psql' ]] ; then
 		done
 	done
 
-	echo "Indexing Pubmed Central identifiers"
-	psql -c "CREATE INDEX pmcid__idx ON yoctogi USING btree (pmcid) WITH (fillfactor=100)" yoctogi
-	psql -c "CREATE INDEX pmcid_lower__idx ON yoctogi USING btree ((lower(pmcid))) WITH (fillfactor=100)" yoctogi
-
-	echo "Optimizing indexes"
-	psql -c "ANALYZE yoctogi" yoctogi
+	# There is no fact table as such anymore, since everything is in partitions now. The following
+	# steps should be dropped eventually.
+	# echo "Indexing Pubmed Central identifiers"
+	# psql -c "CREATE INDEX pmcid__idx ON yoctogi USING btree (pmcid) WITH (fillfactor=100)" yoctogi
+	# psql -c "CREATE INDEX pmcid_lower__idx ON yoctogi USING btree ((lower(pmcid))) WITH (fillfactor=100)" yoctogi
+	#
+	# echo "Optimizing indexes"
+	# psql -c "ANALYZE yoctogi" yoctogi
 
 	echo "Indexing dimension table of publications"
 	psql -c "CREATE INDEX publications_pmcid__idx ON yoctogi_publications USING btree (pmcid) WITH (fillfactor=100)" yoctogi
@@ -264,7 +277,8 @@ if [[ "$db" = 'psql' ]] ; then
 fi
 
 if [[ "$db" = 'psql' ]] ; then
-	psql -c 'GRANT SELECT ON yoctogi TO yoctogi' yoctogi
+	# There is no fact table anymore.
+	# psql -c 'GRANT SELECT ON yoctogi TO yoctogi' yoctogi
 	psql -c 'GRANT SELECT ON yoctogi_publications TO yoctogi' yoctogi
 	for prefix_0 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
 		for prefix_1 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
