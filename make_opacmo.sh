@@ -62,6 +62,35 @@ cut_below() {
 		| sort -k 1 > $2.tmp
 }
 
+generate_dimensions() {
+	pmcfile=$1
+	outfile=$2
+
+	echo "   - generating Yoctogi dimension tables"
+
+	echo "     - publication PMIDs"
+	join -t "	" -1 1 -2 1 -o 0,2.2 $pmcfile pmid.tsv | uniq \
+		> $pmcfile.tmp
+
+	echo "     - publication DOIs"
+	join -t "	" -1 1 -2 1 -o 0,1.2,2.2 $pmcfile.tmp doi.tsv | uniq \
+		> $pmcfile.tmp2
+
+	echo "     - publication titles"
+	join -t "	" -1 1 -2 1 -o 0,1.2,1.3,2.2 $pmcfile.tmp2 titles.tsv | uniq \
+		> $pmcfile.tmp
+
+	echo "     - publication journals"
+	join -t "	" -1 1 -2 1 -o 0,1.2,1.3,1.4,2.2 $pmcfile.tmp journals.tsv | uniq \
+		> $pmcfile.tmp2
+
+	echo "     - publication years"
+	join -t "	" -1 1 -2 1 -o 0,1.2,1.3,1.4,1.5,2.2 $pmcfile.tmp2 year.tsv | uniq \
+		> $outfile
+
+	rm -f $pmcfile.tmp $pmcfile.tmp2
+}
+
 check_dir() {
 	if [ ! -d "./$1" ] ; then
 		echo "This script needs to be executed where './$1' is present."
@@ -84,7 +113,7 @@ help_message() {
 	echo "  pner         : run bioknack's parallelized named entity recognition (default)"
 	echo "  tsv          : filter and join NER output into TSV files"
 	echo "  labels       : create TSV files that map identifiers to readable names"
-	echo "  yoctogi      : create denormalized TSV files for loading into Yoctogi"
+	echo "  yoctogi      : create TSV files for loading into Yoctogi"
 	echo ""
 	echo "High performance cluster options for 'command':"
 	echo "  bundle       : execute 'freeze', 'get' and 'dictionaries' from above and then"
@@ -114,8 +143,10 @@ fi
 prefix=*
 data_dir=opacmo_data
 
-# Should the data be denormalised? If you plan to use Yoctogi, then you need to denormalize...
-denormalize=1
+# Should the data be denormalised? If you plan to use Yoctogi, then you either need to
+# denormalize and use a Yoctogi fact table, or you do not denormalize and use fact table
+# partitions.
+denormalize=0
 
 # If denormalize=1, should we also generate lower case versions of gene-/species- and term-names?
 # This is required if MongoDB is used as a backend, because MongoDB cannot generate to indices on
@@ -235,7 +266,7 @@ if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] || [ "$1" = 'sge' ] ; then
 		terms_chebi=$data_dir/`basename "$genes" __genes.tsv`__terms_chebi.tsv
 
 		tmp=`dirname "$genes"`
-		# Postfix is added below. Depends on whether we denormalise or not...
+		# Postfix is added below. Depends on whether we denormalize or not...
 		out=$data_dir/`basename "$genes" __genes.tsv`
 
 		cut_below 3 $genes
@@ -259,6 +290,9 @@ if [ "$1" = 'all' ] || [ "$1" = 'tsv' ] || [ "$1" = 'sge' ] ; then
 			cp $terms_go.tmp ${out}__terms_go_processed.tsv
 			cp $terms_do.tmp ${out}__terms_do_processed.tsv
 			cp $terms_chebi.tmp ${out}__terms_chebi_processed.tsv
+
+			# Keep track of the PMC IDs:
+			cut -f 1 ${out}__*_processed.tsv | uniq | sort | uniq > ${out}__pmcids_processed.tsv
 		fi
 
 		rm -f $genes.tmp $species.tmp $species.tmp2 $terms.tmp $tmp/*.tmp
@@ -352,60 +386,50 @@ if [ "$1" = 'all' ] || [ "$1" = 'yoctogi' ] || [ "$1" = 'sge' ] ; then
 				mv $joined.tmp2 $data_dir/`basename $joined __joined.tsv`__yoctogi.tsv
 			fi
 
-			echo "   - generating Yoctogi dimension tables"
-# (pmcid VARCHAR(24), pmid VARCHAR(24), doi VARCHAR(1024), pmctitle TEXT, journal TEXT, year VARCHAR(4))
-
-			echo "     - publication PMIDs"
-			join -t "	" -1 1 -2 1 -o 0,2.2 $joined pmid.tsv | uniq \
-				> $joined.tmp
-
-			echo "     - publication DOIs"
-			join -t "	" -1 1 -2 1 -o 0,1.2,2.2 $joined.tmp doi.tsv | uniq \
-				> $joined.tmp2
-
-			echo "     - publication titles"
-			join -t "	" -1 1 -2 1 -o 0,1.2,1.3,2.2 $joined.tmp2 titles.tsv | uniq \
-				> $joined.tmp
-
-			echo "     - publication journals"
-			join -t "	" -1 1 -2 1 -o 0,1.2,1.3,1.4,2.2 $joined.tmp journals.tsv | uniq \
-				> $joined.tmp2
-
-			echo "     - publication years"
-			join -t "	" -1 1 -2 1 -o 0,1.2,1.3,1.4,1.5,2.2 $joined.tmp2 year.tsv | uniq \
-				> $data_dir/`basename $joined __joined.tsv`__yoctogi_publications.tsv
-
-			rm -f $joined.tmp $joined.tmp2
+			generate_dimensions $joined $data_dir/`basename $joined __joined.tsv`__yoctogi_publications.tsv
 		done
 	else
-		# NOTE Keeping normalized tables will eventually be faded out.
+		# If we do not denormalize, then arrange the TSVs so that they can be loaded into partitions:
 		for genes in $data_dir/*__genes_processed.tsv ; do
 			if [ ! -f $genes ] ; then continue ; fi
 
 			echo " - processing `basename $genes __genes_processed.tsv`"
+			pmcids=$data_dir/`basename "$genes" __genes_processed.tsv`__pmcids_processed.tsv
 			species=$data_dir/`basename "$genes" __genes_processed.tsv`__species_processed.tsv
-			terms=$data_dir/`basename "$genes" __genes_processed.tsv`__terms_processed.tsv
+			terms_go=$data_dir/`basename "$genes" __genes_processed.tsv`__terms_go_processed.tsv
+			terms_do=$data_dir/`basename "$genes" __genes_processed.tsv`__terms_do_processed.tsv
+			terms_chebi=$data_dir/`basename "$genes" __genes_processed.tsv`__terms_chebi_processed.tsv
 
 			# Postfix is added below.
 			out=$data_dir/`basename $genes __genes_processed.tsv`
 
 			echo "   - adding gene names"
 			sort -k 2,2 -t "	" $genes > $genes.tmp
-			join -t "	" -a 1 -1 2 -2 1 -o 1.1,2.2,0,1.3 $genes gene_names.tsv > ${out}__yoctogi_genes.tsv
-
-			echo "   - adding ontology term-names"
-			sort -k 2,2 -t "	" $terms > $terms.tmp
-			join -t "	" -a 1 -1 2 -2 1 -o 1.1,2.2,0,1.3 $terms term_names.tsv > ${out}__yoctogi_terms.tsv
+			join -t "	" -1 2 -2 1 -o 1.1,2.2,0,1.3 $genes.tmp gene_names.tsv > ${out}__yoctogi_genes.tsv
 
 			echo "   - adding species names"
 			sort -k 2,2 -t "	" $species > $species.tmp
-			join -t "	" -a 1 -1 2 -2 1 -o 1.1,2.2,0,1.3 $species $data_dir/species_names.tmp > ${out}__yoctogi_species.tsv
+			join -t "	" -1 2 -2 1 -o 1.1,2.2,0,1.3 $species.tmp $data_dir/species_names.tmp > ${out}__yoctogi_species.tsv
 
-			echo "   - adding publication titles"
-			join -t "	" -1 1 -2 1 -o 0,2.2 $genes titles.tsv | uniq \
-				> ${out}__yoctogi_titles.tsv
+			echo "   - adding GO ontology term-names"
+			sort -k 2,2 -t "	" $terms_go > $terms_go.tmp
+			join -t "	" -1 2 -2 1 -o 1.1,2.2,0,1.3 $terms_go.tmp term_names.tsv > ${out}__yoctogi_terms_go.tsv
 
-			rm -f $genes.tmp $terms.tmp $species.tmp
+			echo "   - adding DO ontology term-names"
+			sort -k 2,2 -t "	" $terms_do > $terms_do.tmp
+			join -t "	" -1 2 -2 1 -o 1.1,2.2,0,1.3 $terms_do.tmp term_names.tsv > ${out}__yoctogi_terms_do.tsv
+
+			echo "   - adding ChEBI ontology term-names"
+			sort -k 2,2 -t "	" $terms_chebi > $terms_chebi.tmp
+			join -t "	" -1 2 -2 1 -o 1.1,2.2,0,1.3 $terms_chebi.tmp term_names.tsv > ${out}__yoctogi_terms_chebi.tsv
+
+			# Keep track of the IDs that made it into the Yoctogi tables:
+			# (Obsolete term names will have been dropped now.)
+			cut -f 1 ${out}__yoctogi_*.tsv | uniq | sort | uniq > ${out}__yoctogi_pmcids.tsv
+
+			generate_dimensions $pmcids ${out}__yoctogi_publications.tsv
+
+			rm -f $genes.tmp $species.tmp $terms_go.tmp $terms_do.tmp $terms_chebi.tmp
 		done
 	fi
 

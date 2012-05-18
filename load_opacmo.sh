@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Normalized data from make_opacmo.sh is directly fed into the partitions now. It is
+# not necessary to build a huge dimension table anymore that is then copped up here.
+
 db='psql'
 
 fact_table=yoctogi
@@ -108,32 +111,26 @@ for tsv in opacmo_data/*__yoctogi*.tsv ; do
 
 	echo " - processing `basename "$tsv"`"
 
-	# If we see the fact table, then make sure that all scores are integers.
-	if [[ "$table" = 'yoctogi' ]] ; then
+	# If we see fact table partitions, then make sure that all scores are integers.
+	if [[ "$table" = 'yoctogi_pmcids' ]] ; then
+		awk -F "\t" '{print "PMC"$0}' $tsv >> opacmo_data/yoctogi__pmcid.tmp
+	elif [[ "$table" = 'yoctogi_genes' ]] ||
+			[[ "$table" = 'yoctogi_species' ]] ||
+			[[ "$table" = 'yoctogi_terms_go' ]] ||
+			[[ "$table" = 'yoctogi_terms_do' ]] || 
+			[[ "$table" = 'yoctogi_terms_chebi' ]] ; then
 		awk -F "\t" '{
-				entrezscore=$4;
-				speciesscore=$7;
-				goscore=$10;
-				doscore=$13;
-				chebiscore=$16;
-				if (entrezscore == "") { entrezscore='0' };
-				if (speciesscore == "") { speciesscore='0' };
-				if (goscore == "") { goscore='0' };
-				if (doscore == "") { doscore='0' };
-				if (chebiscore == "") { chebiscore='0' };
-				print "PMC"$1"\t"$2"\t"$3"\t"entrezscore"\t"$5"\t"$6"\t"speciesscore"\t"$8"\t"$9"\t"goscore"\t"$11"\t"$12"\t"doscore"\t"$14"\t"$15"\t"chebiscore;
+				score=$4;
+				if (score == "") { score='0' };
+				print "PMC"$1"\t"$2"\t"$3"\t"score;
 			}' $tsv | grep -E '^PMC[0-9]+	' > $table_file
-		cut -f 1 $table_file | sort | uniq | sed '/^$/d' >> opacmo_data/yoctogi__pmcid.tmp
-		cut -f 1,2,3,4 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]*$/d' >> opacmo_data/yoctogi__entrezname.tmp
-		cut -f 1,2,3,4 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]*$/d' >> opacmo_data/yoctogi__entrezid.tmp
-		cut -f 1,5,6,7 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]*$/d' >> opacmo_data/yoctogi__speciesname.tmp
-		cut -f 1,5,6,7 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]$/d' >> opacmo_data/yoctogi__speciesid.tmp
-		cut -f 1,8,9,10 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]*$/d' >> opacmo_data/yoctogi__goname.tmp
-		cut -f 1,8,9,10 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]*$/d' >> opacmo_data/yoctogi__goid.tmp
-		cut -f 1,11,12,13 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]*$/d' >> opacmo_data/yoctogi__doname.tmp
-		cut -f 1,11,12,13 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]*$/d' >> opacmo_data/yoctogi__doid.tmp
-		cut -f 1,14,15,16 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]*$/d' >> opacmo_data/yoctogi__chebiname.tmp
-		cut -f 1,14,15,16 $table_file | sort | uniq | sed '/^PMC[0-9]*[ 	]*$/d' >> opacmo_data/yoctogi__chebiid.tmp
+
+		if [[ "$table" = 'yoctogi_genes' ]] ; then
+			out=entrez
+		else
+			out=`echo "$table" | awk -F "_" '{print $NF}'`
+		fi
+		sort $table_file | uniq | sed '/^PMC[0-9]*[ 	]*$/d' | tee -a opacmo_data/yoctogi__${out}name.tmp >> opacmo_data/yoctogi__${out}id.tmp
 	else
 		awk -F "\t" '{print "PMC"$0}' $tsv > $table_file
 
