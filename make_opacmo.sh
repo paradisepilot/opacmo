@@ -91,6 +91,29 @@ generate_dimensions() {
 	rm -f $pmcfile.tmp $pmcfile.tmp2
 }
 
+extend_with_aggregate() {
+	tablefile=$1
+	extrafile=$2
+
+	echo "  - adding aggregate data from $extrafile"
+
+	<"$tablefile" $ruby_interpreter -e "xtra = {} ; File.open(\"$extrafile\", 'r').each_line { |line|
+		chunks = line.chomp.split(\"\\t\", 2);
+		aggregate = xtra[chunks[0]] || [];
+		aggregate << chunks[1].split(\"\\t\");
+		xtra[chunks[0]] = aggregate;
+	}
+	STDIN.each { |line|
+		chunks = line.split(\"\\t\", 2);
+		aggregate = xtra[chunks[0]] || [];
+		aggregate = aggregate.sort { |x, y| y[2].to_i <=> x[2].to_i }.map { |x| x.join('@!@') };
+		puts \"#{line.chomp}\\t#{aggregate.join('#!#')}\"
+	}" > $tablefile.tmp
+
+	rm -f $tablefile
+	mv $tablefile.tmp $tablefile
+}
+
 check_dir() {
 	if [ ! -d "./$1" ] ; then
 		echo "This script needs to be executed where './$1' is present."
@@ -428,6 +451,11 @@ if [ "$1" = 'all' ] || [ "$1" = 'yoctogi' ] || [ "$1" = 'sge' ] ; then
 			cut -f 1 ${out}__yoctogi_*.tsv | uniq | sort | uniq > ${out}__yoctogi_pmcids.tsv
 
 			generate_dimensions $pmcids ${out}__yoctogi_publications.tsv
+			extend_with_aggregate ${out}__yoctogi_publications.tsv ${out}__yoctogi_genes.tsv
+			extend_with_aggregate ${out}__yoctogi_publications.tsv ${out}__yoctogi_species.tsv
+			extend_with_aggregate ${out}__yoctogi_publications.tsv ${out}__yoctogi_terms_go.tsv
+			extend_with_aggregate ${out}__yoctogi_publications.tsv ${out}__yoctogi_terms_do.tsv
+			extend_with_aggregate ${out}__yoctogi_publications.tsv ${out}__yoctogi_terms_chebi.tsv
 
 			rm -f $genes.tmp $species.tmp $terms_go.tmp $terms_do.tmp $terms_chebi.tmp
 		done

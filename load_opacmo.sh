@@ -96,7 +96,7 @@ if [[ "$db" = 'psql' ]] ; then
 		done
 	done
 
-	psql -c "DROP TABLE IF EXISTS ${fact_table}_publications ; CREATE TABLE ${fact_table}_publications (pmcid VARCHAR(24), pmid VARCHAR($pmid_length), doi VARCHAR(1024), pmctitle TEXT, journal TEXT, year VARCHAR(4))" yoctogi
+	psql -c "DROP TABLE IF EXISTS ${fact_table}_publications ; CREATE TABLE ${fact_table}_publications (pmcid VARCHAR(24), pmid VARCHAR($pmid_length), doi VARCHAR(1024), pmctitle TEXT, journal TEXT, year VARCHAR(4), entrez_ner TEXT, species_ner TEXT, go_ner TEXT, do_ner TEXT, chebi_ner TEXT)" yoctogi
 fi
 
 if [[ "$db" = 'psql' ]] ; then
@@ -279,6 +279,7 @@ if [[ "$db" = 'psql' ]] ; then
 	psql -c 'GRANT SELECT ON yoctogi_publications TO yoctogi' yoctogi
 	for prefix_0 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
 		for prefix_1 in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9} ; do
+			psql -c "GRANT SELECT ON yoctogi__p_pmcid__${prefix_0}${prefix_1} TO yoctogi" yoctogi
 			psql -c "GRANT SELECT ON yoctogi__p_entrezname__${prefix_0}${prefix_1} TO yoctogi" yoctogi
 			psql -c "GRANT SELECT ON yoctogi__p_entrezid__${prefix_0}${prefix_1} TO yoctogi" yoctogi
 			psql -c "GRANT SELECT ON yoctogi__p_speciesname__${prefix_0}${prefix_1} TO yoctogi" yoctogi
