@@ -104,8 +104,8 @@ a:hover {
 }
 
 .linkedlabel {
+	font-weight: bold;
 	font-style: italic;
-	padding-right: 11px;
 	color: #888888;
 }
 
@@ -139,26 +139,24 @@ a:hover {
 
 .resultlink {
 	background-color: #eeeeee;
-	margin-right: 21px;
-	border-left-style: solid;
-	border-left-width: 13px;
+	margin-left: 21px;
 	padding: 2px;
+	line-height: 18px;
+	display: inline-block;
 }
 
 .resultlink-selected {
 	color: #8bcc00;
 	background-color: #eeeeee;
 	font-style: italic;
-	margin-right: 21px;
-	border-left-style: solid;
-	border-left-width: 13px;
+	margin-left: 21px;
 	padding: 2px;
+	line-height: 18px;
+	display: inline-block;
 }
 
 .genescontainer {
-	float: left;
 	font-size: 13px;
-	color: #ff0000;
 }
 
 .speciescontainer {
@@ -225,7 +223,7 @@ a:hover {
 	display: block;
 	margin-left: auto;
 	margin-right: auto;
-	margin-bottom: 5px;
+	margin-bottom: 0px;
 	cursor: pointer;
 }
 
@@ -433,6 +431,15 @@ a:hover {
 .suggestiontable {
 	float: left;
 	margin: 5px;
+	border-style: solid;
+	border-color: #dddddd;
+	border-width: 1px;
+	padding-top: 7px;
+	padding-bottom: 0px;
+	padding-left: 0px;
+	padding-right: 0px;
+	border-radius: 3px;
+	-moz-border-radius: 3px;
 }
 
 .notificationimportant {
@@ -446,6 +453,8 @@ a:hover {
 
 table {
 	cursor: default;
+	border-style: none;
+	margin-bottom: 0px;
 }
 
 tr.table-tr-hovered {

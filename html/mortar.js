@@ -3,13 +3,13 @@
  *
  * For copyright and license see LICENSE file.
  *
- * Contributions:
+ * Contributors:
  *   - Joachim Baran
- *
  */
 
 var updateInProgress = false;
 
+var opacmoBaseURI = '/opacmo/html';
 var yoctogiBaseURI = 'http://localhost/yoctogi.fcgi';
 
 var aboutSlider = null;
@@ -21,15 +21,17 @@ var noSuggestionsMessage = new Element('span', { 'class': 'notfound', 'html': 'N
 var noResultsMessage = new Element('span', { 'class': 'notfound', 'html': 'No results found.' });
 
 var browseMessage = new Element('span', { 'class': 'browsetext', 'html': '' });
-var browseLeft = new Element('img', { 'class': 'browsebutton', 'src': '/images/gray_dark/arrow_left_12x12.png' });
-var browseRight = new Element('img', { 'class': 'browsebutton', 'src': '/images/gray_dark/arrow_right_12x12.png' });
+var browseLeft = new Element('img', { 'class': 'browsebutton', 'src': opacmoBaseURI + '/images/gray_dark/arrow_left_12x12.png' });
+var browseRight = new Element('img', { 'class': 'browsebutton', 'src': opacmoBaseURI + '/images/gray_dark/arrow_right_12x12.png' });
 var browseOffset = 0;
 var yoctogiAggregateLimit = 25;
 
 var sortedMessage = new Element('span', { 'class': 'sortedtext', 'html': '<br />Sorted by score of: ' });
 var sortedByEntrez = new Element('a', { 'class': 'sortedbutton', 'html': 'Entrez Genes' });
 var sortedBySpecies = new Element('a', { 'class': 'sortedbutton', 'html': 'Species' });
-var sortedByOBO = new Element('a', { 'class': 'sortedbutton', 'html': 'OBO Terms' });
+var sortedByGO = new Element('a', { 'class': 'sortedbutton', 'html': 'GO Terms' });
+var sortedByDO = new Element('a', { 'class': 'sortedbutton', 'html': 'DO Terms' });
+var sortedByChEBI = new Element('a', { 'class': 'sortedbutton', 'html': 'ChEBI Terms' });
 var sortedSelected = 'entrezscore';
 
 var queryOverText = null;
@@ -47,28 +49,40 @@ var processQueryTimeOutID = 0;
 
 var selectedEntities = {};
 
+var opacmoStats = {};
+
 var column2Header = {
-		'titles':	'Title',
-		'pmcid':        'PMC ID',
-		'entrezname':   'Entrez Gene',
-		'entrezid':     'Entrez ID',
-		'entrezscore':  'bioknack Score',
-		'speciesname':  'Species Name',
-		'speciesid':    'Species ID',
-		'speciesscore': 'bioknack Score',
-		'oboname':      'OBO Term Name',
-		'oboid':        'OBO ID',
-		'oboscore':     'bioknack Score'
+		'titles':		'Title',
+		'pmcid':		'PMC ID',
+		'entrezname':		'Entrez Gene Name',
+		'entrezid':		'Entrez Gene ID',
+		'entrezscore':		'bioknack Score',
+		'speciesname':		'NCBI Species Name',
+		'speciesid':		'NCBI Species ID',
+		'speciesscore':		'bioknack Score',
+		'goname':		'Gene Ontology Term Name',
+		'goid':			'Gene Ontology ID',
+		'goscore':		'bioknack Score',
+		'doname':		'Disease Ontology Term Name',
+		'doid':			'Disease Ontology ID',
+		'doscore':		'bioknack Score',
+		'chebiname':		'ChEBI Term Name',
+		'chebiid':		'ChEBI ID',
+		'chebiscore':		'bioknack Score'
 	};
 
 var header2ResultHeader = {
-		'PMC ID':	'PMC ID',
-		'Entrez Gene':	'Genes:',
-		'Entrez ID':	'Genes:',
-		'Species Name':	'Species:',
-		'Species ID':	'Species:',
-		'OBO Term Name':'Terms:',
-		'OBO ID':	'Terms:'
+		'PMC ID':		'PMC ID',
+		'Entrez Gene':		'Genes:',
+		'Entrez ID':		'Genes:',
+		'Species Name':		'Species:',
+		'Species ID':		'Species:',
+		'GO Term Name':		'Terms:',
+		'GO ID':		'Terms:',
+		'DO Term Name':		'Terms:',
+		'DO ID':		'Terms:',
+		'ChEBI Term Name':	'Terms:',
+		'ChEBI ID':		'Terms:'
 };
 
 var type2Name = {
@@ -96,7 +110,7 @@ var suggestionRequest = new Request.JSON({
 			var totalResults = 0;
 
 			for (var result in response.result) {
-				var partialResult = JSON.parse(response.result[result])['result']
+				var partialResult = response.result[result]['result']
 
 				totalResults += partialResult.length;
 
@@ -117,11 +131,11 @@ var resultRequest = new Request.JSON({
 		url: yoctogiBaseURI,
 		link: 'cancel',
 		onSuccess: function(response) {
-			resultSpinner.hide();
-
 			if (response.error) {
+				resultSpinner.hide();
+
 				// TODO
-				alert(response);
+				alert(response['message']);
 				return;
 			}
 
@@ -171,19 +185,36 @@ var resultRequest = new Request.JSON({
 				sortedMessage.inject($('resultbrowse'));
 				sortedByEntrez.inject($('resultbrowse'));
 				sortedBySpecies.inject($('resultbrowse'));
-				sortedByOBO.inject($('resultbrowse'));
+				sortedByGO.inject($('resultbrowse'));
+				sortedByDO.inject($('resultbrowse'));
+				sortedByChEBI.inject($('resultbrowse'));
 
 				updateSortedButtons();
 			}
 
+			// TODO If browseOffset > 0, then hide Springer container.
+
 			var continuousNumber = browseOffset + 1;
+			opacmoStats = { 'distribution': {} };
 
 			for (var pmcid in response.result) {
 				var pmcInfo = new Element('div#pmc' + pmcid, {
 					'class': 'pmccontainer'
 				});
+				var pmcidElement = new Element('div#pmcid' + pmcid, {
+					'class': 'pmcidcontainer'
+				});
 				var title = new Element('div#title' + pmcid, {
 					'class': 'titlecontainer'
+				});
+				var journal = new Element('div#journal' + pmcid, {
+					'class': 'journalcontainer'
+				});
+				var year = new Element('div#year' + pmcid, {
+					'class': 'yearcontainer'
+				});
+				var doi = new Element('div#doi' + pmcid, {
+					'class': 'doicontainer'
 				});
 				var genes = new Element('div#genes' + pmcid, {
 					'class': 'genescontainer'
@@ -191,54 +222,111 @@ var resultRequest = new Request.JSON({
 				var species = new Element('div#species' + pmcid, {
 					'class': 'speciescontainer'
 				});
-				var terms = new Element('div#terms' + pmcid, {
+				var terms_go = new Element('div#termsgo' + pmcid, {
+					'class': 'termscontainer'
+				});
+				var terms_do = new Element('div#termsdo' + pmcid, {
+					'class': 'termscontainer'
+				});
+				var terms_chebi = new Element('div#termschebi' + pmcid, {
 					'class': 'termscontainer'
 				});
 				for (var i in response.result[pmcid]) {
 					var batch = response.result[pmcid][i];
 
-					if (!batch.selection)
+					if (!batch.selection || batch.selection.length == 1)
 						continue;
 
-					if (batch.selection[0] == 'pmcid') {
-						new Element('span', { 'html': '' + (continuousNumber++) + '.&nbsp;' }).inject(title);
+					// Collect statistics:
+					if (opacmoStats['distribution'][batch.result[0][5]])
+						opacmoStats['distribution'][batch.result[0][5]] = opacmoStats['distribution'][batch.result[0][5]] + 1;
+					else
+						opacmoStats['distribution'][batch.result[0][5]] = 1;
 
-						var clazz = 'resulttitle';
-						if (selectedEntities['PMC ID%' + batch.result[0][0]])
-							clazz = 'resulttitle-selected';
+					new Element('span', { 'html': '' + (continuousNumber++) + '.&nbsp;' }).inject(title);
 
-						var entity = new Element('a', {
-							'class': clazz,
-							'href': 'http://www.ncbi.nlm.nih.gov/pmc/articles/' + batch.result[0][0],
-							'target': '_blank'
-						});
+					var clazz = 'resulttitle';
+					if (selectedEntities['PMC ID%' + batch.result[0][0]])
+						clazz = 'resulttitle-selected';
 
-						entity.set('html', batch.result[0][0] + '&nbsp;&mdash;&nbsp;' + batch.result[0][1]);
-						entity.inject(title);
-					} else if (batch.selection[0] == 'entrezname') {
-						for (var row = 0; row < batch.result.length; row++)
-							makeRow('Genes:', 'resultlink', row, genes, batch.result[row][0], batch.result[row][1], batch.result[row][2], 'http://www.ncbi.nlm.nih.gov/gene/' + batch.result[row][1]);
-					} else if (batch.selection[0] == 'speciesname') {
-						for (var row = 0; row < batch.result.length; row++)
-							makeRow('Species:', 'resultlink', row, species, batch.result[row][0], batch.result[row][1], batch.result[row][2], 'http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=' + batch.result[row][1]);
-					} else if (batch.selection[0] == 'oboname') {
-						for (var row = 0; row < batch.result.length; row++) {
-							var linkOut = 'http://www.ebi.ac.uk/ontology-lookup/browse.do?ontName=DOID&termId=DOID%3A' + batch.result[row][1].replace(/^[^:]+:/, '');
-							if (batch.result[row][1].indexOf('GO:') == 0)
-								linkOut = 'http://amigo.geneontology.org/cgi-bin/amigo/term_details?term=' + batch.result[row][1];
-							makeRow('Terms:', 'resultlink', row, terms, batch.result[row][0], batch.result[row][1], batch.result[row][2], linkOut);
-						}
+					var entity = new Element('a', {
+						'class': clazz,
+						'href': 'http://www.ncbi.nlm.nih.gov/pmc/articles/' + batch.result[0][0],
+						'target': '_blank'
+					});
+					entity.set('html', batch.result[0][3]);
+					entity.inject(title);
+
+					journal.set('html', batch.result[0][4]);
+					year.set('html', batch.result[0][5]);
+
+					entity = new Element('a', {
+						'class': clazz,
+						'href': 'http://www.ncbi.nlm.nih.gov/pmc/articles/' + batch.result[0][0],
+						'target': '_blank'
+					});
+					entity.set('html', 'doi:' + batch.result[0][2]);
+					entity.inject(doi);
+
+					entity = new Element('a', {
+						'class': clazz,
+						'href': 'http://www.ncbi.nlm.nih.gov/pmc/articles/' + batch.result[0][0],
+						'target': '_blank'
+					});
+					entity.set('html', batch.result[0][0]);
+					entity.inject(pmcidElement);
+
+					var aggregate = batch.result[0][6].length > 0 ? batch.result[0][6].split('#!#') : [];
+					for (var row = 0; row < aggregate.length; row++) {
+						var entity = aggregate[row].split('@!@');
+						makeRow('Genes:', 'resultlink', row, genes, entity[0], entity[1], entity[2], 'http://www.ncbi.nlm.nih.gov/gene/' + entity[1]);
+					}
+
+					aggregate = batch.result[0][7].length > 0 ? batch.result[0][7].split('#!#') : [];
+					for (var row = 0; row < aggregate.length; row++) {
+						var entity = aggregate[row].split('@!@');
+						makeRow('Species:', 'resultlink', row, species, entity[0], entity[1], entity[2], 'http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=' + entity[1]);
+					}
+
+					aggregate = batch.result[0][8].length > 0 ? batch.result[0][8].split('#!#') : [];
+					for (var row = 0; row < aggregate.length; row++) {
+						var entity = aggregate[row].split('@!@');
+						makeRow('GO Terms:', 'resultlink', row, terms_go, entity[0], entity[1], entity[2], 'http://amigo.geneontology.org/cgi-bin/amigo/term_details?term=' + entity[1]);
+					}
+
+					aggregate = batch.result[0][9].length > 0 ? batch.result[0][9].split('#!#') : [];
+					for (var row = 0; row < aggregate.length; row++) {
+						var entity = aggregate[row].split('@!@');
+						makeRow('DO Terms:', 'resultlink', row, terms_do, entity[0], entity[1], entity[2], 'http://www.ebi.ac.uk/ontology-lookup/browse.do?ontName=DOID&termId=DOID%3A' + entity[1].replace(/^[^:]+:/, ''));
+					}
+
+					aggregate = batch.result[0][10].length > 0 ? batch.result[0][10].split('#!#') : [];
+					for (var row = 0; row < aggregate.length; row++) {
+						var entity = aggregate[row].split('@!@');
+						makeRow('ChEBI Terms:', 'resultlink', row, terms_chebi, entity[0], entity[1], entity[2], 'http://www.ebi.ac.uk/chebi/searchId.do?chebiId=' + entity[1]);
 					}
 				}
 				title.inject(pmcInfo);
+				journal.inject(pmcInfo);
+				year.inject(pmcInfo);
+				pmcidElement.inject(pmcInfo);
+				doi.inject(pmcInfo);
 				genes.inject(pmcInfo);
 				species.inject(pmcInfo);
-				terms.inject(pmcInfo);
+				terms_go.inject(pmcInfo);
+				terms_do.inject(pmcInfo);
+				terms_chebi.inject(pmcInfo);
 				pmcInfo.inject($('resultcontainer'));
 			}
 
-			if (response.count == 0)
+			if (response.count == 0) {
 				noResultsMessage.inject($('resultcontainer'));
+				resultSpinner.hide();
+			} else
+				if ($('optionSpringer').checked)
+					springerRequest.send('SPRINGER=' + response.options['springerterms'].join('+'));
+				else
+					resultSpinner.hide();
 		}
 	});
 
@@ -247,15 +335,83 @@ var springerRequest = new Request.JSON({
 		method: 'get',
 		link: 'cancel',
 		onSuccess: function(response) {
-			suggestionSpinner.hide();
-
 			if (response.error) {
+				resultSpinner.hide();
+
 				// TODO
 				alert(response['message']);
 				return;
 			}
+
+			var springerStats = { 'distribution': {} };
+
+			var total = response.result.result[0].total;
+
+			new Element('span', { 'html': total }).inject($('springerstage'));
+
+			for (var i = 0; i < response.result.records.length; i++) {
+				var title = response.result.records[i].title;
+				var url = response.result.records[i].url;
+				var doi = response.result.records[i].doi;
+				var date = response.result.records[i].publicationDate;
+				var journal = response.result.records[i].name;
+
+				new Element('div', { 'html':
+					'  title=' + title +
+					'  url=' + url +
+					'  doi=' + doi +
+					'  date=' + date +
+					'  journal=' + journal
+				}).inject($('springerstage'));
+				if (springerStats['distribution'][date.substr(0, 4)])
+					springerStats['distribution'][date.substr(0, 4)] = springerStats['distribution'][date.substr(0, 4)] + 1;
+				else
+					springerStats['distribution'][date.substr(0, 4)] = 1;
+			}
+
+			new Element('div#yearChart').inject($('springerstage'));
+			var yearDistribution = new google.visualization.DataTable();
+			yearDistribution.addColumn('string', 'Year');
+			yearDistribution.addColumn('number', 'opacmo');
+			yearDistribution.addColumn('number', 'Springer');
+			var yearOpacmoInterval = getYearInterval(opacmoStats['distribution']);
+			var yearSpringerInterval = getYearInterval(springerStats['distribution']);
+			var yearMin = yearOpacmoInterval[0] < yearSpringerInterval[0] ? yearOpacmoInterval[0] : yearSpringerInterval[0];
+			var yearMax = yearOpacmoInterval[1] > yearSpringerInterval[1] ? yearOpacmoInterval[1] : yearSpringerInterval[1];
+			if (opacmoStats['distribution'][''] || springerStats['distribution']['']) {
+				var opacmoYearUnknown = opacmoStats['distribution'][''] ? opacmoStats['distribution'][''] : 0;
+				var springerYearUnknown = springerStats['distribution'][''] ? springerStats['distribution'][''] : 0;
+
+				yearDistribution.addRow([ 'unknown', opacmoYearUnknown, springerYearUnknown ]);
+			}
+			for (var year = yearMin; year <= yearMax; year++) {
+				var opacmoYear = opacmoStats['distribution']['' + year] || 0;
+				var springerYear = springerStats['distribution']['' + year] || 0;
+
+				yearDistribution.addRow([ '' + year, opacmoYear, springerYear ]);
+			}
+			var yearChart = new google.visualization.BarChart(document.getElementById('yearChart'));
+			yearChart.draw(yearDistribution, { 'width': 400, 'height': 500 });
+
+			resultSpinner.hide();
 		}
 	});
+
+function getYearInterval(distribution) {
+	var yearMin = 2011, yearMax = new Date().getFullYear();
+
+	for (var year in distribution) {
+		if (year.length == 4) {
+			year = parseInt(year);
+			if (year < yearMin)
+				yearMin = year;
+			else if (year > yearMax)
+				yearMax = year;
+		}
+	}
+
+	return [ yearMin, yearMax ];
+}
 
 function topbar_activate(id) {
 	$('topbar_home').erase('class');
@@ -303,13 +459,12 @@ function makeRow(header, clazz, row, container, name, id, score, linkOut) {
 
 	var entity = new Element('a', {
 		'class': clazz,
-		'style': 'border-color: #' + (clipped_score).toString(16) + '55555;',
 		'href': linkOut,
 		'target': '_blank'
 	});
 
-	entity.set('html', '&nbsp;' + name.replace(/ /g, '&nbsp;') +
-		'&nbsp;(' + id + '&nbsp;/&nbsp;score&nbsp;' + score + ') ');
+	// TODO Insert mouse over pop-up with ID? What about touch devices?
+	entity.set('html', '<span style="color: #ffffff; background-color: #' + (clipped_score).toString(16) + '55555;">&nbsp;Score ' + score  + '&nbsp;</span>&nbsp;' + name.replace(/ /g, '&nbsp;'));
 	entity.inject(container);
 }
 
@@ -394,7 +549,7 @@ function makeTable(container, matrix, headers, result) {
 
 	var closeButton = new Element('img#c' + id, {
 		'class': 'closebutton',
-		'src': '/images/gray_light/x_alt_12x12.png'
+		'src': opacmoBaseURI + '/images/gray_light/x_alt_12x12.png'
 	});
 	closeButton.addEvent('click', function() {
 		if ($('c' + id).getStyle('opacity') != 1)
@@ -417,10 +572,10 @@ function makeTable(container, matrix, headers, result) {
 		});
 	});
 	closeButton.addEvent('mouseover', function() {
-		closeButton.setProperty('src', '/images/red/x_alt_12x12.png');
+		closeButton.setProperty('src', opacmoBaseURI + '/images/red/x_alt_12x12.png');
 	});
 	closeButton.addEvent('mouseleave', function() {
-		closeButton.setProperty('src', '/images/gray_light/x_alt_12x12.png');
+		closeButton.setProperty('src', opacmoBaseURI + '/images/gray_light/x_alt_12x12.png');
 	});
 
 	var htmlTable = new HtmlTable(options);
@@ -480,14 +635,20 @@ function processQuery() {
 		yoctogiClauses['pmcid'] = query;
 	if (query.match(/^[a-zA-Z].*$/)) {
 		yoctogiClauses['speciesname'] = query;
-		yoctogiClauses['oboname'] = query;
+		yoctogiClauses['goname'] = query;
+		yoctogiClauses['doname'] = query;
+		yoctogiClauses['chebiname'] = query;
 	}
 	if (query.match(/^\d+$/)) {
 		yoctogiClauses['entrezid'] = query;
 		yoctogiClauses['speciesid'] = query;
 	}
-	if (query.toUpperCase().match(/^(D|DO|DO:|DOI:|DOID:|DOID:\d+|G|GO|GO:|GO:\d+)$/))
-		yoctogiClauses['oboid'] = query;
+	if (query.toUpperCase().match(/^(G|GO|GO:|GO:\d+)$/))
+		yoctogiClauses['goid'] = query;
+	if (query.toUpperCase().match(/^(D|DO|DO:|DOI:|DOID:|DOID:\d+)$/))
+		yoctogiClauses['doid'] = query;
+	if (query.toUpperCase().match(/^(C|CH|CHE:|CHEB:|CHEBI:|CHEBI:|CHEBI:\d+)$/))
+		yoctogiClauses['chebiid'] = query;
 
 	var yoctogiOptions = { like: true, batch: true, distinct: true, caseinsensitive: !$('optionCaseSensitive').checked }
 
@@ -499,9 +660,6 @@ function processQuery() {
 
 	suggestionSpinner.show();
 	suggestionRequest.send(JSON.encode(yoctogiRequest));
-
-	if ($('optionSpringer').checked)
-		springerRequest.send('SPRINGER=' + query);
 }
 
 function runConjunctiveQuery(format) {
@@ -514,6 +672,7 @@ function runConjunctiveQuery(format) {
 
 	var yoctogiClausesLength = 0;
 	var yoctogiClauses = {};
+	var springerTerms = [];
 
 	for (var i = 0; i < suggestions.length; i++) {
 		var table = suggestionTables[suggestions[i].id];
@@ -532,6 +691,7 @@ function runConjunctiveQuery(format) {
 				}
 				selectedEntities[header2ResultHeader[table.head.getChildren()[0].innerHTML] +
 					'%' + selectedTDs[j].innerHTML] = true;;
+				springerTerms.push(selectedTDs[j].innerHTML);
 			}
 		}
 	}
@@ -552,11 +712,21 @@ function runConjunctiveQuery(format) {
 			nextSortedSelected.push('speciesscore');
 		} else
 			sortedBySpecies.set('style', 'display: none;');
-		if (yoctogiClauses['oboname'] || yoctogiClauses['oboid']) {
-			sortedByOBO.set('style', 'display: inline;');
-			nextSortedSelected.push('oboscore');
+		if (yoctogiClauses['goname'] || yoctogiClauses['goid']) {
+			sortedByGO.set('style', 'display: inline;');
+			nextSortedSelected.push('goscore');
 		} else
-			sortedByOBO.set('style', 'display: none;');
+			sortedByGO.set('style', 'display: none;');
+		if (yoctogiClauses['doname'] || yoctogiClauses['doid']) {
+			sortedByDO.set('style', 'display: inline;');
+			nextSortedSelected.push('doscore');
+		} else
+			sortedByDO.set('style', 'display: none;');
+		if (yoctogiClauses['chebiname'] || yoctogiClauses['chebiid']) {
+			sortedByChEBI.set('style', 'display: inline;');
+			nextSortedSelected.push('chebiscore');
+		} else
+			sortedByChEBI.set('style', 'display: none;');
 
 		if (nextSortedSelected.indexOf(sortedSelected) < 0 && nextSortedSelected.length > 0)
 			sortedSelected = nextSortedSelected[0];
@@ -588,16 +758,18 @@ function runConjunctiveQuery(format) {
 	if (format)
 		yoctogiOptions['format'] = format;
 
+	// Keep track of the Springer terms for later, since they will be needed when
+	// the results come back from opacmo:
+	yoctogiOptions['springerterms'] = springerTerms;
+
 	var yoctogiRequest = {
 		aggregate: {
 			pmcid: [
-				['entrezname', 'entrezid', 'entrezscore'],
-				['speciesname','speciesid','speciesscore'],
-				['oboname', 'oboid', 'oboscore']
+				['pmcid']
 			]
 		},
 		clauses: yoctogiClauses,
-		dimensions: { titles: { pmcid: [ 'pmctitle' ] } },
+		dimensions: { publications: { pmcid: [ 'pmid', 'doi', 'pmctitle', 'journal', 'year', 'entrez_ner', 'species_ner', 'go_ner', 'do_ner', 'chebi_ner' ] } },
 		options: yoctogiOptions
 	};
 
@@ -607,14 +779,20 @@ function runConjunctiveQuery(format) {
 function updateSortedButtons() {
 	sortedByEntrez.set('class', 'sortedbutton');
 	sortedBySpecies.set('class', 'sortedbutton');
-	sortedByOBO.set('class', 'sortedbutton');
+	sortedByGO.set('class', 'sortedbutton');
+	sortedByDO.set('class', 'sortedbutton');
+	sortedByChEBI.set('class', 'sortedbutton');
 
 	if (sortedSelected == 'entrezscore')
 		sortedByEntrez.set('class', 'sortedbutton-selected');
 	else if (sortedSelected == 'speciesscore')
 		sortedBySpecies.set('class', 'sortedbutton-selected');
-	else if (sortedSelected == 'oboscore')
-		sortedByOBO.set('class', 'sortedbutton-selected');
+	else if (sortedSelected == 'goscore')
+		sortedByGO.set('class', 'sortedbutton-selected');
+	else if (sortedSelected == 'doscore')
+		sortedByDO.set('class', 'sortedbutton-selected');
+	else if (sortedSelected == 'chebiscore')
+		sortedByChEBI.set('class', 'sortedbutton-selected');
 }
 
 function updateHelpers() {
@@ -697,10 +875,24 @@ $(window).onload = function() {
 		updateSortedButtons();
 		runConjunctiveQuery();
 	});
-	sortedByOBO.addEvent('click', function() {
-		if (sortedSelected == 'oboscore')
+	sortedByGO.addEvent('click', function() {
+		if (sortedSelected == 'goscore')
 			return;
-		sortedSelected = 'oboscore';
+		sortedSelected = 'goscore';
+		updateSortedButtons();
+		runConjunctiveQuery();
+	});
+	sortedByDO.addEvent('click', function() {
+		if (sortedSelected == 'doscore')
+			return;
+		sortedSelected = 'doscore';
+		updateSortedButtons();
+		runConjunctiveQuery();
+	});
+	sortedByChEBI.addEvent('click', function() {
+		if (sortedSelected == 'chebiscore')
+			return;
+		sortedSelected = 'chebiscore';
 		updateSortedButtons();
 		runConjunctiveQuery();
 	});
