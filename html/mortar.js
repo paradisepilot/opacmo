@@ -10,7 +10,7 @@
 var updateInProgress = false;
 
 var opacmoBaseURI = '/opacmo/html';
-var yoctogiBaseURI = 'http://localhost/yoctogi.fcgi';
+var yoctogiBaseURI = 'http://localhost:9992/yoctogi.fcgi';
 
 var aboutSlider = null;
 var aboutSwitch = new Element('div#aboutswitch', { 'class': 'headerbutton' } );
@@ -24,6 +24,7 @@ var browseMessage = new Element('span', { 'class': 'browsetext', 'html': '' });
 var browseLeft = new Element('img', { 'class': 'browsebutton', 'src': opacmoBaseURI + '/images/gray_dark/arrow_left_12x12.png' });
 var browseRight = new Element('img', { 'class': 'browsebutton', 'src': opacmoBaseURI + '/images/gray_dark/arrow_right_12x12.png' });
 var browseOffset = 0;
+var yoctogiSuggestionLimit = 5;
 var yoctogiAggregateLimit = 25;
 
 var sortedMessage = new Element('span', { 'class': 'sortedtext', 'html': '<br />Sorted by score of: ' });
@@ -72,17 +73,17 @@ var column2Header = {
 	};
 
 var header2ResultHeader = {
-		'PMC ID':		'PMC ID',
-		'Entrez Gene':		'Genes:',
-		'Entrez ID':		'Genes:',
-		'Species Name':		'Species:',
-		'Species ID':		'Species:',
-		'GO Term Name':		'Terms:',
-		'GO ID':		'Terms:',
-		'DO Term Name':		'Terms:',
-		'DO ID':		'Terms:',
-		'ChEBI Term Name':	'Terms:',
-		'ChEBI ID':		'Terms:'
+		'PMC ID':				'PMC ID',
+		'Entrez Gene Name':			'Entrez Genes:',
+		'Entrez Gene ID':			'Entrez Genes:',
+		'NCBI Species Name':			'NCBI Species:',
+		'NCBI Species ID':			'NCBI Species:',
+		'Gene Ontology Term Name':		'Gene Ontology Terms:',
+		'Gene Ontology ID':			'Gene Ontology Terms:',
+		'Disease Ontology Term Name':		'Disease Ontology Terms:',
+		'Disease Ontology ID':			'Disease Ontology Terms:',
+		'ChEBI Term Name':			'ChEBI Terms:',
+		'ChEBI ID':				'ChEBI Terms:'
 };
 
 var type2Name = {
@@ -138,6 +139,9 @@ var resultRequest = new Request.JSON({
 				alert(response['message']);
 				return;
 			}
+
+			if ($('optionHelpMessages').checked)
+				helperSliders['help2'].slideIn();
 
 			if (response.download) {
 				if (response.linkout) {
@@ -195,7 +199,7 @@ var resultRequest = new Request.JSON({
 			// TODO If browseOffset > 0, then hide Springer container.
 
 			var continuousNumber = browseOffset + 1;
-			opacmoStats = { 'distribution': {} };
+			opacmoStats = { 'total': parseInt(response['count']), 'distribution': {}, 'dois': {} };
 
 			for (var pmcid in response.result) {
 				var pmcInfo = new Element('div#pmc' + pmcid, {
@@ -242,6 +246,7 @@ var resultRequest = new Request.JSON({
 						opacmoStats['distribution'][batch.result[0][5]] = opacmoStats['distribution'][batch.result[0][5]] + 1;
 					else
 						opacmoStats['distribution'][batch.result[0][5]] = 1;
+					opacmoStats['dois'][batch.result[0][2]] = true;
 
 					new Element('span', { 'html': '' + (continuousNumber++) + '.&nbsp;' }).inject(title);
 
@@ -279,31 +284,31 @@ var resultRequest = new Request.JSON({
 					var aggregate = batch.result[0][6].length > 0 ? batch.result[0][6].split('#!#') : [];
 					for (var row = 0; row < aggregate.length; row++) {
 						var entity = aggregate[row].split('@!@');
-						makeRow('Genes:', 'resultlink', row, genes, entity[0], entity[1], entity[2], 'http://www.ncbi.nlm.nih.gov/gene/' + entity[1]);
+						makeRow(header2ResultHeader['Entrez Gene Name'], 'resultlink', row, genes, entity[0], entity[1], entity[2], 'http://www.ncbi.nlm.nih.gov/gene/' + entity[1]);
 					}
 
 					aggregate = batch.result[0][7].length > 0 ? batch.result[0][7].split('#!#') : [];
 					for (var row = 0; row < aggregate.length; row++) {
 						var entity = aggregate[row].split('@!@');
-						makeRow('Species:', 'resultlink', row, species, entity[0], entity[1], entity[2], 'http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=' + entity[1]);
+						makeRow(header2ResultHeader['NCBI Species Name'], 'resultlink', row, species, entity[0], entity[1], entity[2], 'http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=' + entity[1]);
 					}
 
 					aggregate = batch.result[0][8].length > 0 ? batch.result[0][8].split('#!#') : [];
 					for (var row = 0; row < aggregate.length; row++) {
 						var entity = aggregate[row].split('@!@');
-						makeRow('GO Terms:', 'resultlink', row, terms_go, entity[0], entity[1], entity[2], 'http://amigo.geneontology.org/cgi-bin/amigo/term_details?term=' + entity[1]);
+						makeRow(header2ResultHeader['Gene Ontology Term Name'], 'resultlink', row, terms_go, entity[0], entity[1], entity[2], 'http://amigo.geneontology.org/cgi-bin/amigo/term_details?term=' + entity[1]);
 					}
 
 					aggregate = batch.result[0][9].length > 0 ? batch.result[0][9].split('#!#') : [];
 					for (var row = 0; row < aggregate.length; row++) {
 						var entity = aggregate[row].split('@!@');
-						makeRow('DO Terms:', 'resultlink', row, terms_do, entity[0], entity[1], entity[2], 'http://www.ebi.ac.uk/ontology-lookup/browse.do?ontName=DOID&termId=DOID%3A' + entity[1].replace(/^[^:]+:/, ''));
+						makeRow(header2ResultHeader['Disease Ontology Term Name'], 'resultlink', row, terms_do, entity[0], entity[1], entity[2], 'http://www.ebi.ac.uk/ontology-lookup/browse.do?ontName=DOID&termId=DOID%3A' + entity[1].replace(/^[^:]+:/, ''));
 					}
 
 					aggregate = batch.result[0][10].length > 0 ? batch.result[0][10].split('#!#') : [];
 					for (var row = 0; row < aggregate.length; row++) {
 						var entity = aggregate[row].split('@!@');
-						makeRow('ChEBI Terms:', 'resultlink', row, terms_chebi, entity[0], entity[1], entity[2], 'http://www.ebi.ac.uk/chebi/searchId.do?chebiId=' + entity[1]);
+						makeRow(header2ResultHeader['ChEBI Term Name'], 'resultlink', row, terms_chebi, entity[0], entity[1], entity[2], 'http://www.ebi.ac.uk/chebi/searchId.do?chebiId=' + entity[1]);
 					}
 				}
 				title.inject(pmcInfo);
@@ -321,11 +326,13 @@ var resultRequest = new Request.JSON({
 
 			if (response.count == 0) {
 				noResultsMessage.inject($('resultcontainer'));
+				$('resultspringer').empty();
 				resultSpinner.hide();
 			} else
-				if ($('optionSpringer').checked)
+				if ($('optionSpringer').checked) {
+					$('resultspringer').empty();
 					springerRequest.send('SPRINGER=' + response.options['springerterms'].join('+'));
-				else
+				} else
 					resultSpinner.hide();
 		}
 	});
@@ -343,11 +350,15 @@ var springerRequest = new Request.JSON({
 				return;
 			}
 
-			var springerStats = { 'distribution': {} };
-
 			var total = response.result.result[0].total;
 
-			new Element('span', { 'html': total }).inject($('springerstage'));
+			// For counting documents that are both in the top-n of opacmo/Springer:
+			var overlaps = 0;
+			delete opacmoStats['dois'][''];
+
+			var springerStats = { 'total': total, 'distribution': {} };
+
+			new Element('span', { 'class': 'browsetext', 'html': 'Showing results 1 to ' + response.result.records.length + ' of ' + total + ' total' }).inject($('resultspringer'));
 
 			for (var i = 0; i < response.result.records.length; i++) {
 				var title = response.result.records[i].title;
@@ -362,14 +373,38 @@ var springerRequest = new Request.JSON({
 					'  doi=' + doi +
 					'  date=' + date +
 					'  journal=' + journal
-				}).inject($('springerstage'));
+				}).inject($('resultspringer'));
 				if (springerStats['distribution'][date.substr(0, 4)])
 					springerStats['distribution'][date.substr(0, 4)] = springerStats['distribution'][date.substr(0, 4)] + 1;
 				else
 					springerStats['distribution'][date.substr(0, 4)] = 1;
+				if (opacmoStats['dois'][doi])
+					overlaps++;
 			}
 
-			new Element('div#yearChart').inject($('springerstage'));
+			// Everything!
+			new Element('div#totalChart', { 'style': 'text-align: center; margin-left: auto; margin-right: auto;' }).inject($('resultspringer'));
+			var totalChart = new google.visualization.ColumnChart(document.getElementById('totalChart'));
+			var totalStats = new google.visualization.DataTable();
+			totalStats.addColumn('string', 'Source');
+			totalStats.addColumn('number', 'Number of results');
+			totalStats.addRow([ 'opacmo', parseInt(opacmoStats['total']) ]);
+			totalStats.addRow([ 'Springer', parseInt(springerStats['total']) ]);
+			totalChart.draw(totalStats, { 'width': 500, 'height': 600, 'fontName': 'Helvetica', 'fontSize': 12, 'backgroundColor': '#eeeeee', 'legend': { 'position': 'none' } });
+
+			// Top-25 only!
+			new Element('div#overlapChart', { 'style': 'text-align: center; margin-left: auto; margin-right: auto;' }).inject($('resultspringer'));
+			var overlapChart = new google.visualization.PieChart(document.getElementById('overlapChart'));
+			var overlapStats = new google.visualization.DataTable();
+			overlapStats.addColumn('string', 'Overlap');
+			overlapStats.addColumn('number', 'Number of results');
+			overlapStats.addRow([ 'opacmo', Object.keys(opacmoStats['dois']).length - overlaps ]);
+			overlapStats.addRow([ 'Springer', response.result.records.length - overlaps ]);
+			overlapStats.addRow([ 'both', overlaps ]);
+			overlapChart.draw(overlapStats, { 'width': 500, 'height': 600, 'fontName': 'Helvetica', 'fontSize': 12, 'backgroundColor': '#eeeeee', 'legend': { 'position': 'bottom' } });
+
+			// Top-25 only!
+			new Element('div#yearChart', { 'style': 'text-align: center; margin-left: auto; margin-right: auto;' }).inject($('resultspringer'));
 			var yearDistribution = new google.visualization.DataTable();
 			yearDistribution.addColumn('string', 'Year');
 			yearDistribution.addColumn('number', 'opacmo');
@@ -390,8 +425,8 @@ var springerRequest = new Request.JSON({
 
 				yearDistribution.addRow([ '' + year, opacmoYear, springerYear ]);
 			}
-			var yearChart = new google.visualization.BarChart(document.getElementById('yearChart'));
-			yearChart.draw(yearDistribution, { 'width': 400, 'height': 500 });
+			var yearChart = new google.visualization.ColumnChart(document.getElementById('yearChart'));
+			yearChart.draw(yearDistribution, { 'width': 500, 'height': 600, 'fontName': 'Helvetica', 'fontSize': 12, 'backgroundColor': '#eeeeee', 'legend': { 'position': 'bottom' } });
 
 			resultSpinner.hide();
 		}
@@ -454,8 +489,9 @@ function makeRow(header, clazz, row, container, name, id, score, linkOut) {
 		clazz = clazz + '-selected';
 
 	score = parseInt(score);
-	clipped_score = score < 5 ? 5 : score;
-	clipped_score = score > 15 ? 15 : clipped_score;
+	clipped_score = score >>> 1;
+	clipped_score = clipped_score < 5 ? 5 : clipped_score;
+	clipped_score = clipped_score > 15 ? 15 : clipped_score;
 
 	var entity = new Element('a', {
 		'class': clazz,
@@ -464,7 +500,7 @@ function makeRow(header, clazz, row, container, name, id, score, linkOut) {
 	});
 
 	// TODO Insert mouse over pop-up with ID? What about touch devices?
-	entity.set('html', '<span style="color: #ffffff; background-color: #' + (clipped_score).toString(16) + '55555;">&nbsp;Score ' + score  + '&nbsp;</span>&nbsp;' + name.replace(/ /g, '&nbsp;'));
+	entity.set('html', '<span style="color: #ffffff; background-color: #' + (clipped_score).toString(16) + '55555;">&nbsp;Score ' + score  + '&nbsp;</span>&nbsp;&nbsp;' + name.replace(/ /g, '&nbsp;') + '&nbsp;');
 	entity.inject(container);
 }
 
@@ -590,9 +626,6 @@ function makeTable(container, matrix, headers, result) {
 		browseOffset = 0;
 		runConjunctiveQuery();
 
-		if ($('optionHelpMessages').checked)
-			helperSliders['help2'].slideIn();
-
 	});
 	htmlTable.addEvent('rowUnfocus', function(row) {
 		workaroundHtmlTable = htmlTable;
@@ -650,7 +683,7 @@ function processQuery() {
 	if (query.toUpperCase().match(/^(C|CH|CHE:|CHEB:|CHEBI:|CHEBI:|CHEBI:\d+)$/))
 		yoctogiClauses['chebiid'] = query;
 
-	var yoctogiOptions = { like: true, batch: true, distinct: true, caseinsensitive: !$('optionCaseSensitive').checked }
+	var yoctogiOptions = { like: true, batch: true, distinct: true, caseinsensitive: !$('optionCaseSensitive').checked, limit: yoctogiSuggestionLimit }
 
 	var yoctogiRequest = { clauses: yoctogiClauses, options: yoctogiOptions  }
 
