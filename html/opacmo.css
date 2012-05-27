@@ -327,6 +327,10 @@ a:hover {
 	margin-left: -35px;
 }
 
+.relativespinner {
+	position: relative;
+}
+
 #suggestionspinner {
 	display: table-cell;
 	text-align: center;
@@ -494,6 +498,7 @@ td.suggestiontable {
 	padding: 0px 18px;
 	border-radius: 3px;
 	-moz-border-radius: 3px;
+	min-height: 250px;
 }
 
 #springerribbon {

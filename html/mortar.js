@@ -10,7 +10,7 @@
 var updateInProgress = false;
 
 var opacmoBaseURI = '/opacmo/html';
-var yoctogiBaseURI = 'http://localhost:9992/yoctogi.fcgi';
+var yoctogiBaseURI = 'http://localhost/yoctogi.fcgi';
 
 var aboutSlider = null;
 var aboutSwitch = new Element('div#aboutswitch', { 'class': 'headerbutton' } );
@@ -38,6 +38,7 @@ var sortedSelected = 'entrezscore';
 var queryOverText = null;
 var suggestionSpinner = null;
 var resultSpinner = null;
+var springerSpinner = null;
 
 var workaroundHtmlTable = null;
 var workaroundHtmlTableRow = null;
@@ -882,6 +883,7 @@ $(window).onload = function() {
 
 	suggestionSpinner = new Spinner('suggestionspinner');
 	resultSpinner = new Spinner('resultspinner');
+	springerSpinner = new Spinner('springerspinner', { 'class': 'relativespinner' });
 
 	browseLeft.addEvent('click', function() {
 		if (browseOffset - yoctogiAggregateLimit >= 0)
