@@ -142,7 +142,7 @@ a:hover {
 
 .resultlink {
 	background-color: #eeeeee;
-	margin-left: 21px;
+	margin-left: 11px;
 	padding: 2px;
 	line-height: 18px;
 	display: inline-block;
@@ -159,15 +159,18 @@ a:hover {
 }
 
 .genescontainer {
-	font-size: 13px;
+	font-size: 11px;
+	padding-left: 18px;
 }
 
 .speciescontainer {
-	font-size: 13px;
+	font-size: 11px;
+	padding-left: 18px;
 }
 
 .termscontainer {
-	font-size: 13px;
+	font-size: 11px;
+	padding-left: 18px;
 }
 
 .optionsswitch {
@@ -498,7 +501,7 @@ td.suggestiontable {
 	padding: 0px 18px;
 	border-radius: 3px;
 	-moz-border-radius: 3px;
-	min-height: 250px;
+	min-height: 180px;
 }
 
 #springerribbon {

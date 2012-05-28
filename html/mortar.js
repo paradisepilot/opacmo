@@ -249,38 +249,7 @@ var resultRequest = new Request.JSON({
 						opacmoStats['distribution'][batch.result[0][5]] = 1;
 					opacmoStats['dois'][batch.result[0][2]] = true;
 
-					new Element('span', { 'html': '' + (continuousNumber++) + '.&nbsp;' }).inject(title);
-
-					var clazz = 'resulttitle';
-					if (selectedEntities['PMC ID%' + batch.result[0][0]])
-						clazz = 'resulttitle-selected';
-
-					var entity = new Element('a', {
-						'class': clazz,
-						'href': 'http://www.ncbi.nlm.nih.gov/pmc/articles/' + batch.result[0][0],
-						'target': '_blank'
-					});
-					entity.set('html', batch.result[0][3]);
-					entity.inject(title);
-
-					journal.set('html', batch.result[0][4]);
-					year.set('html', batch.result[0][5]);
-
-					entity = new Element('a', {
-						'class': clazz,
-						'href': 'http://www.ncbi.nlm.nih.gov/pmc/articles/' + batch.result[0][0],
-						'target': '_blank'
-					});
-					entity.set('html', 'doi:' + batch.result[0][2]);
-					entity.inject(doi);
-
-					entity = new Element('a', {
-						'class': clazz,
-						'href': 'http://www.ncbi.nlm.nih.gov/pmc/articles/' + batch.result[0][0],
-						'target': '_blank'
-					});
-					entity.set('html', batch.result[0][0]);
-					entity.inject(pmcidElement);
+					makeDocumentView(continuousNumber++, pmcidElement, doi, title, journal, year, batch.result[0][0], batch.result[0][2], batch.result[0][3], batch.result[0][4], batch.result[0][5]);
 
 					var aggregate = batch.result[0][6].length > 0 ? batch.result[0][6].split('#!#') : [];
 					for (var row = 0; row < aggregate.length; row++) {
@@ -325,16 +294,17 @@ var resultRequest = new Request.JSON({
 				pmcInfo.inject($('resultcontainer'));
 			}
 
+			resultSpinner.hide();
+
 			if (response.count == 0) {
 				noResultsMessage.inject($('resultcontainer'));
 				$('resultspringer').empty();
-				resultSpinner.hide();
 			} else
 				if ($('optionSpringer').checked) {
 					$('resultspringer').empty();
+					springerSpinner.show();
 					springerRequest.send('SPRINGER=' + response.options['springerterms'].join('+'));
-				} else
-					resultSpinner.hide();
+				}
 		}
 	});
 
@@ -343,9 +313,9 @@ var springerRequest = new Request.JSON({
 		method: 'get',
 		link: 'cancel',
 		onSuccess: function(response) {
-			if (response.error) {
-				resultSpinner.hide();
+			springerSpinner.hide();
 
+			if (response.error) {
 				// TODO
 				alert(response['message']);
 				return;
@@ -366,19 +336,37 @@ var springerRequest = new Request.JSON({
 				var url = response.result.records[i].url;
 				var doi = response.result.records[i].doi;
 				var date = response.result.records[i].publicationDate;
-				var journal = response.result.records[i].name;
+				var journal = response.result.records[i].publicationName;
+				var year = date.substr(0, 4);
 
-				new Element('div', { 'html':
-					'  title=' + title +
-					'  url=' + url +
-					'  doi=' + doi +
-					'  date=' + date +
-					'  journal=' + journal
-				}).inject($('resultspringer'));
-				if (springerStats['distribution'][date.substr(0, 4)])
-					springerStats['distribution'][date.substr(0, 4)] = springerStats['distribution'][date.substr(0, 4)] + 1;
+				var pmcInfo = new Element('div#springer' + i, {
+					'class': 'pmccontainer'
+				});
+				var titleElement = new Element('div#springertitle' + i, {
+					'class': 'titlecontainer'
+				});
+				var journalElement = new Element('div#springerjournal' + i, {
+					'class': 'journalcontainer'
+				});
+				var yearElement = new Element('div#springeryear' + i, {
+					'class': 'yearcontainer'
+				});
+				var doiElement = new Element('div#springerdoi' + i, {
+					'class': 'doicontainer'
+				});
+
+				makeDocumentView(i + 1, null, doiElement, titleElement, journalElement, yearElement, url, doi, title, journal, year);
+
+				titleElement.inject(pmcInfo);
+				journalElement.inject(pmcInfo);
+				yearElement.inject(pmcInfo);
+				doiElement.inject(pmcInfo);
+				pmcInfo.inject($('resultspringer'));
+
+				if (springerStats['distribution'][year])
+					springerStats['distribution'][year] = springerStats['distribution'][year] + 1;
 				else
-					springerStats['distribution'][date.substr(0, 4)] = 1;
+					springerStats['distribution'][year] = 1;
 				if (opacmoStats['dois'][doi])
 					overlaps++;
 			}
@@ -432,6 +420,67 @@ var springerRequest = new Request.JSON({
 			resultSpinner.hide();
 		}
 	});
+
+function makeDocumentView(
+		continuousNumber,
+		pmcidElement,
+		doiElement,
+		titleElement,
+		journalElement,
+		yearElement,
+		pmcid,
+		doi,
+		title,
+		journal,
+		year
+	) {
+	new Element('span', { 'html': '' + continuousNumber + '.&nbsp;' }).inject(titleElement);
+
+	var clazz = 'resulttitle';
+	if (pmcidElement != null && selectedEntities['PMC ID%' + pmcid])
+		clazz = 'resulttitle-selected';
+
+	/*
+	   If a PMC ID Element is given, link out via the PMC ID,
+	   otherwise, if PMC ID is null too, then link out via DOI,
+	   otherwise, use the PMC ID as a link...
+	 */
+	var linkOut;
+	if (pmcidElement)
+		linkOut = 'http://www.ncbi.nlm.nih.gov/pmc/articles/' + pmcid;
+	else if (pmcid == null)
+		linkOut = 'doi://' + doi;
+	else
+		linkOut = pmcid;
+
+	var entity = new Element('a', {
+		'class': clazz,
+		'href': linkOut,
+		'target': '_blank'
+	});
+	entity.set('html', title);
+	entity.inject(titleElement);
+
+	journalElement.set('html', journal);
+	yearElement.set('html', year);
+
+	entity = new Element('a', {
+		'class': clazz,
+		'href': linkOut,
+		'target': '_blank'
+	});
+	entity.set('html', 'doi:' + doi);
+	entity.inject(doiElement);
+
+	entity = new Element('a', {
+		'class': clazz,
+		'href': linkOut,
+		'target': '_blank'
+	});
+	entity.set('html', pmcid);
+	if (pmcidElement)
+		entity.inject(pmcidElement);
+}
 
 function getYearInterval(distribution) {
 	var yearMin = 2011, yearMax = new Date().getFullYear();
@@ -867,7 +916,7 @@ $(window).onload = function() {
 
 		new Element('div', {
 			'class': 'notificationimportant',
-			html: 'The database is currently being updated. Please check back later.'
+			'html': 'The database is currently being updated. Please check back later.'
 		}).inject($('notifications'));
 
 		$('query').alt = '--- disabled due to update ---';
@@ -883,7 +932,10 @@ $(window).onload = function() {
 
 	suggestionSpinner = new Spinner('suggestionspinner');
 	resultSpinner = new Spinner('resultspinner');
-	springerSpinner = new Spinner('springerspinner', { 'class': 'relativespinner' });
+	relativeSpinnerDiv = new Element('div', {
+		'class': 'relativespinner-img'
+	});
+	springerSpinner = new Spinner('springerspinner', { 'class': 'relativespinner', 'img': relativeSpinnerDiv });
 
 	browseLeft.addEvent('click', function() {
 		if (browseOffset - yoctogiAggregateLimit >= 0)
