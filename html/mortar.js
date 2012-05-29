@@ -16,9 +16,13 @@ var aboutSlider = null;
 var aboutSwitch = new Element('div#aboutswitch', { 'class': 'headerbutton' } );
 var releaseSlider = null;
 var releaseSwitch = new Element('div#releaseswitch');
+
 var helperSliders = {};
+var springerSlider = null;
+
 var noSuggestionsMessage = new Element('span', { 'class': 'notfound', 'html': 'No suggestions found.' });
 var noResultsMessage = new Element('span', { 'class': 'notfound', 'html': 'No results found.' });
+var noSpringerResultsMessage = new Element('span', { 'class': 'notfound', 'html': 'No results found.' });
 
 var browseMessage = new Element('span', { 'class': 'browsetext', 'html': '' });
 var browseLeft = new Element('img', { 'class': 'browsebutton', 'src': opacmoBaseURI + '/images/gray_dark/arrow_left_12x12.png' });
@@ -206,19 +210,19 @@ var resultRequest = new Request.JSON({
 				var pmcInfo = new Element('div#pmc' + pmcid, {
 					'class': 'pmccontainer'
 				});
-				var pmcidElement = new Element('div#pmcid' + pmcid, {
+				var pmcidElement = new Element('span#pmcid' + pmcid, {
 					'class': 'pmcidcontainer'
 				});
 				var title = new Element('div#title' + pmcid, {
 					'class': 'titlecontainer'
 				});
-				var journal = new Element('div#journal' + pmcid, {
+				var journal = new Element('span#journal' + pmcid, {
 					'class': 'journalcontainer'
 				});
-				var year = new Element('div#year' + pmcid, {
+				var year = new Element('span#year' + pmcid, {
 					'class': 'yearcontainer'
 				});
-				var doi = new Element('div#doi' + pmcid, {
+				var doi = new Element('span#doi' + pmcid, {
 					'class': 'doicontainer'
 				});
 				var genes = new Element('div#genes' + pmcid, {
@@ -299,9 +303,11 @@ var resultRequest = new Request.JSON({
 			if (response.count == 0) {
 				noResultsMessage.inject($('resultcontainer'));
 				$('resultspringer').empty();
+				springerSlider.hide();
 			} else
 				if ($('optionSpringer').checked) {
 					$('resultspringer').empty();
+					springerSlider.show();
 					springerSpinner.show();
 					springerRequest.send('SPRINGER=' + response.options['springerterms'].join('+'));
 				}
@@ -318,6 +324,11 @@ var springerRequest = new Request.JSON({
 			if (response.error) {
 				// TODO
 				alert(response['message']);
+				return;
+			}
+
+			if (response.result.records.length == 0) {
+				noSpringerResultsMessage.inject($('resultspringer'));
 				return;
 			}
 
@@ -345,13 +356,13 @@ var springerRequest = new Request.JSON({
 				var titleElement = new Element('div#springertitle' + i, {
 					'class': 'titlecontainer'
 				});
-				var journalElement = new Element('div#springerjournal' + i, {
+				var journalElement = new Element('span#springerjournal' + i, {
 					'class': 'journalcontainer'
 				});
-				var yearElement = new Element('div#springeryear' + i, {
+				var yearElement = new Element('span#springeryear' + i, {
 					'class': 'yearcontainer'
 				});
-				var doiElement = new Element('div#springerdoi' + i, {
+				var doiElement = new Element('span#springerdoi' + i, {
 					'class': 'doicontainer'
 				});
 
@@ -376,21 +387,21 @@ var springerRequest = new Request.JSON({
 			var totalChart = new google.visualization.ColumnChart(document.getElementById('totalChart'));
 			var totalStats = new google.visualization.DataTable();
 			totalStats.addColumn('string', 'Source');
-			totalStats.addColumn('number', 'Number of results');
+			totalStats.addColumn('number', 'Number of documents in result');
 			totalStats.addRow([ 'opacmo', parseInt(opacmoStats['total']) ]);
 			totalStats.addRow([ 'Springer', parseInt(springerStats['total']) ]);
-			totalChart.draw(totalStats, { 'width': 500, 'height': 600, 'fontName': 'Helvetica', 'fontSize': 12, 'backgroundColor': '#eeeeee', 'legend': { 'position': 'none' } });
+			totalChart.draw(totalStats, { 'title': 'Returned number of documents', 'titleTextStyle': { 'color': '#666', 'fontName': 'Helvetica', 'fontSize': 16 }, 'width': 500, 'height': 500, 'fontName': 'Helvetica', 'fontSize': 12, 'backgroundColor': '#eeeeee', 'legend': { 'position': 'none' } });
 
 			// Top-25 only!
 			new Element('div#overlapChart', { 'style': 'text-align: center; margin-left: auto; margin-right: auto;' }).inject($('resultspringer'));
 			var overlapChart = new google.visualization.PieChart(document.getElementById('overlapChart'));
 			var overlapStats = new google.visualization.DataTable();
 			overlapStats.addColumn('string', 'Overlap');
-			overlapStats.addColumn('number', 'Number of results');
+			overlapStats.addColumn('number', 'Number of documents in top-25 results');
 			overlapStats.addRow([ 'opacmo', Object.keys(opacmoStats['dois']).length - overlaps ]);
 			overlapStats.addRow([ 'Springer', response.result.records.length - overlaps ]);
 			overlapStats.addRow([ 'both', overlaps ]);
-			overlapChart.draw(overlapStats, { 'width': 500, 'height': 600, 'fontName': 'Helvetica', 'fontSize': 12, 'backgroundColor': '#eeeeee', 'legend': { 'position': 'bottom' } });
+			overlapChart.draw(overlapStats, { 'title': 'Number of documents in the top-25 result set that are returned by opacmo only (blue), by Springer only (red), or returned by both services (yellow)', 'titleTextStyle': { 'color': '#666', 'fontName': 'Helvetica', 'fontSize': 16 }, 'width': 500, 'height': 500, 'fontName': 'Helvetica', 'fontSize': 12, 'backgroundColor': '#eeeeee', 'legend': { 'position': 'bottom' } });
 
 			// Top-25 only!
 			new Element('div#yearChart', { 'style': 'text-align: center; margin-left: auto; margin-right: auto;' }).inject($('resultspringer'));
@@ -406,7 +417,7 @@ var springerRequest = new Request.JSON({
 				var opacmoYearUnknown = opacmoStats['distribution'][''] ? opacmoStats['distribution'][''] : 0;
 				var springerYearUnknown = springerStats['distribution'][''] ? springerStats['distribution'][''] : 0;
 
-				yearDistribution.addRow([ 'unknown', opacmoYearUnknown, springerYearUnknown ]);
+				yearDistribution.addRow([ 'no e-publication date', opacmoYearUnknown, springerYearUnknown ]);
 			}
 			for (var year = yearMin; year <= yearMax; year++) {
 				var opacmoYear = opacmoStats['distribution']['' + year] || 0;
@@ -415,7 +426,7 @@ var springerRequest = new Request.JSON({
 				yearDistribution.addRow([ '' + year, opacmoYear, springerYear ]);
 			}
 			var yearChart = new google.visualization.ColumnChart(document.getElementById('yearChart'));
-			yearChart.draw(yearDistribution, { 'width': 500, 'height': 600, 'fontName': 'Helvetica', 'fontSize': 12, 'backgroundColor': '#eeeeee', 'legend': { 'position': 'bottom' } });
+			yearChart.draw(yearDistribution, { 'title': 'Annual distribution of documents in the top-25 result set', 'titleTextStyle': { 'color': '#666', 'fontName': 'Helvetica', 'fontSize': 16 }, 'width': 500, 'height': 500, 'fontName': 'Helvetica', 'fontSize': 12, 'backgroundColor': '#eeeeee', 'legend': { 'position': 'bottom' } });
 
 			resultSpinner.hide();
 		}
@@ -462,7 +473,11 @@ function makeDocumentView(
 	entity.inject(titleElement);
 
 	journalElement.set('html', journal);
+	if (journal.length > 0)
+		new Element('span', { 'html': ',&nbsp;' }).inject(journalElement);
 	yearElement.set('html', year);
+	if (year.length > 0)
+		new Element('span', { 'html': ',&nbsp;' }).inject(yearElement);
 
 	entity = new Element('a', {
 		'class': clazz,
@@ -478,8 +493,10 @@ function makeDocumentView(
 		'target': '_blank'
 	});
 	entity.set('html', pmcid);
-	if (pmcidElement)
+	if (pmcidElement) {
 		entity.inject(pmcidElement);
+		new Element('span', { 'html': ',&nbsp;' }).inject(pmcidElement);
+	}
 }
 
 function getYearInterval(distribution) {
@@ -910,6 +927,8 @@ $(window).onload = function() {
 	helperSliders['help0'] = new Fx.Slide('help0', { mode: 'vertical' }).hide();
 	helperSliders['help1'] = new Fx.Slide('help1', { mode: 'vertical' }).hide();
 	helperSliders['help2'] = new Fx.Slide('help2', { mode: 'vertical' }).hide();
+
+	springerSlider = new Fx.Slide('springerstage', { mode: 'horizontal' }).hide();
 
 	if (updateInProgress) {
 		$('query').disabled = true;
