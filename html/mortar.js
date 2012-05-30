@@ -10,7 +10,7 @@
 var updateInProgress = false;
 
 var opacmoBaseURI = '/opacmo/html';
-var yoctogiBaseURI = 'http://localhost/yoctogi.fcgi';
+var yoctogiBaseURI = 'http://www.opacmo.org/yoctogi.fcgi';
 
 var aboutSlider = null;
 var aboutSwitch = new Element('div#aboutswitch', { 'class': 'headerbutton' } );
