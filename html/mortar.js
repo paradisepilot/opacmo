@@ -9,7 +9,7 @@
 
 var updateInProgress = false;
 
-var opacmoBaseURI = '/opacmo/html';
+var opacmoBaseURI = '';
 var yoctogiBaseURI = 'http://www.opacmo.org/yoctogi.fcgi';
 
 var aboutSlider = null;
