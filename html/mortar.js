@@ -145,9 +145,6 @@ var resultRequest = new Request.JSON({
 				return;
 			}
 
-			if ($('optionHelpMessages').checked)
-				helperSliders['help2'].slideIn();
-
 			if (response.download) {
 				if (response.linkout) {
 					Cookie.dispose('yoctogi_session');
@@ -180,6 +177,9 @@ var resultRequest = new Request.JSON({
 				makeDownload('galaxy', 'btn success');
 
 			if (response.count > 0) {
+				if ($('optionHelpMessages').checked)
+					helperSliders['help2'].slideIn();
+
 				var pmcidsReturned = 0;
 				browseMax = response.count;
 
@@ -303,11 +303,11 @@ var resultRequest = new Request.JSON({
 			if (response.count == 0) {
 				noResultsMessage.inject($('resultcontainer'));
 				$('resultspringer').empty();
-				springerSlider.hide();
+				springerSlider.slideOut();
 			} else
 				if ($('optionSpringer').checked) {
+					springerSlider.slideIn();
 					$('resultspringer').empty();
-					springerSlider.show();
 					springerSpinner.show();
 					springerRequest.send('SPRINGER=' + response.options['springerterms'].join('+'));
 				}
@@ -326,6 +326,9 @@ var springerRequest = new Request.JSON({
 				alert(response['message']);
 				return;
 			}
+
+			if ($('optionSpringer').checked)
+				springerSlider.slideIn();
 
 			if (response.result.records.length == 0) {
 				noSpringerResultsMessage.inject($('resultspringer'));
@@ -765,8 +768,12 @@ function processQuery() {
 function runConjunctiveQuery(format) {
 	var suggestions = $('suggestioncontainer').getChildren();
 
-	if (!suggestions)
+	if (!suggestions) {
+		helperSliders['help2'].slideOut();
+		springerSlider.slideOut();
+
 		return;
+	}
 
 	selectedEntities = {};
 
@@ -832,8 +839,12 @@ function runConjunctiveQuery(format) {
 			sortedSelected = nextSortedSelected[0];
 	}
 
-	if (yoctogiClausesLength == 0)
+	if (yoctogiClausesLength == 0) {
+		helperSliders['help2'].slideOut();
+		springerSlider.slideOut();
+
 		return;
+	}
 
 	if (!format) {
 		if ($('thirdstage').getStyle('opacity') == 0) {
@@ -921,6 +932,16 @@ $(window).onload = function() {
 
 	$('optionCaseSensitive').addEvent('click', function() {
 		processQuery();
+	});
+
+	$('optionSpringer').addEvent('click', function() {
+		if ($('optionSpringer').checked) {
+			springerSlider.slideIn();
+			runConjunctiveQuery();
+		} else {
+			springerSlider.slideOut();
+			$('resultspringer').empty();
+		}
 	});
 
 	// Okay.. this really needs to become a function..
