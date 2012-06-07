@@ -1,62 +1,90 @@
 #!/bin/bash
 
-PMCID_FILE=tmp/pmcids.tmp
-SAMPLE_FILE_1=tmp/samples1.tmp
-SAMPLE_FILE_2=tmp/samples2.tmp
+TOP_N=100
+SINGLE_FORMAT_FILE=tmp/single.tmp
 
-#rm -f $PMCID_FILE
-#
-#for results in opacmo_data/*__yoctogi_*.tsv ; do
-#	<$results cut -f 1 | sort | uniq >> $PMCID_FILE.tmp
-#done
-#
-#<$PMCID_FILE.tmp sort | uniq > $PMCID_FILE
-#rm -f $PMCID_FILE.tmp
+rm -f $SINGLE_FORMAT_FILE $SINGLE_FORMAT_FILE.tmp
 
-test_pair() {
-	TERM1=$1
-	TERM2=$2
+create_single_file() {
+	TERM=$1
+	CATEGORY=$2
 
-	rm -f $SAMPLE_FILE_1 $SAMPLE_FILE_2
-
-	for results in opacmo_data/*__yoctogi_genes.tsv ; do
-		<$results grep -E "^[0-9]+	[^	]*	$TERM1	" | cut -f 1,4 | sort -k 1,1 >> $SAMPLE_FILE_1
+	for results in opacmo_data/*__yoctogi_$CATEGORY.tsv ; do
+		<$results grep -E "^[0-9]+	[^	]*	$TERM	" | cut -f 1,2 | sort -k 1,1 >> $SINGLE_FORMAT_FILE.tmp
 	done
-
-	for results in opacmo_data/*__yoctogi_terms_do.tsv ; do
-		<$results grep -E "^[0-9]+	[^	]*	$TERM2	" | cut -f 1,4 | sort -k 1,1 >> $SAMPLE_FILE_2
-	done
-
-	<opacmo/hypothesis_testing.r R --no-save | grep -E -A 30 '^V ='
 }
 
-echo -n "BRCA2 vs cancer: "
-test_pair 675 'DOID:162' 2> /dev/null
+get_top_n() {
+	N=$1
+	CATEGORY=$2
+	FILTER=$3
 
-echo -n "BRCA2 vs breast cancer: "
-test_pair 675 'DOID:1612' 2> /dev/null
+	cut -f 3 opacmo_data/*__yoctogi_$CATEGORY.tsv \
+		| sort \
+		| uniq -c \
+		| sed -E 's/^[ ]+//' \
+		| sort -t ' ' -k 1,1 -n -r \
+		| sed -E 's/^[0-9]+ //' > tmp/top_${N}_$CATEGORY.tmp.tmp
 
-echo -n "BRCA2 vs kidney cancer: "
-test_pair 675 'DOID:263' 2> /dev/null
+	if [[ "$FILTER" == "human" ]] ; then
+		grep -E '	9606\|[0-9]+$' tmp/entrez_genes \
+			| cut -f 2 -d '	' \
+			| cut -f 2 -d '|' \
+			| sort | uniq > tmp/entrez_genes.human
+		<tmp/top_${N}_$CATEGORY.tmp.tmp ruby -e '
+				accepted_genes = {}
+				File.new("tmp/entrez_genes.human", "r").each_line { |gene|
+					accepted_genes[gene] = true
+				}
+				STDIN.each_line { |gene|
+					puts gene if accepted_genes.has_key?(gene)
+				}
+			' | head -n $N > tmp/top_${N}_$CATEGORY.tmp
+		rm -f tmp/entrez_genes.human
+	else
+		head -n $N tmp/top_${N}_$CATEGORY.tmp.tmp > tmp/top_${N}_$CATEGORY.tmp
+	fi
 
-echo -n "BRCA2 vs tonsillitis: "
-test_pair 675 'DOID:10456' 2> /dev/null
+	rm -f tmp/top_${N}_$CATEGORY.tmp.tmp
+}
 
-echo -n "BRCA2 vs common cold: "
-test_pair 675 'DOID:10459' 2> /dev/null
+for category in {'genes','terms_go','terms_do','terms_chebi'} ; do
+	filter=''
 
-echo -n "P53 vs cancer: "
-test_pair 7157 'DOID:162' 2> /dev/null
+	if [[ "$category" == "genes" ]] ; then
+		filter=human
+	fi
 
-echo -n "P53 vs breast cancer: "
-test_pair 7157 'DOID:1612' 2> /dev/null
+	get_top_n $TOP_N $category $filter
 
-echo -n "P53 vs kidney cancer: "
-test_pair 7157 'DOID:263' 2> /dev/null
+	for entity in `cat tmp/top_${TOP_N}_$category.tmp` ; do
+		create_single_file "$entity" $category
+	done
+done
 
-echo -n "P53 vs tonsillitis: "
-test_pair 7157 'DOID:10456' 2> /dev/null
+sort $SINGLE_FORMAT_FILE.tmp | uniq > $SINGLE_FORMAT_FILE
+rm -f $SINGLE_FORMAT_FILE.tmp
 
-echo -n "P53 vs common cold: "
-test_pair 7157 'DOID:10459' 2> /dev/null
+exit
+
+# BRCA2
+create_single_file 675 genes human
+
+# TP53
+create_single_file 7157 genes human
+
+# cancer
+create_single_file 'DOID:162' terms_do
+
+# breast cancer
+create_single_file 'DOID:1612' terms_do
+
+# kidney cancer
+create_single_file 'DOID:263' terms_do
+
+# tonsillitis
+create_single_file 'DOID:10456' terms_do
+
+# common cold
+create_single_file 'DOID:10459' terms_do
 

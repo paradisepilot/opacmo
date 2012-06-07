@@ -1,34 +1,25 @@
 # Mann-Whitney-Wilcoxon test on the scores of two entities.
 
-library('hash')
+library('arulesViz')
 
-# pmcids <- read.delim('tmp/pmcids.tmp', header = FALSE, col.names = c('pmcid'), colClasses = c('character'))
-dataset.1 <- read.delim('tmp/samples1.tmp', header = FALSE, col.names = c('pmcid', 'score'), colClasses = c('character', 'integer'))
-dataset.2 <- read.delim('tmp/samples2.tmp', header = FALSE, col.names = c('pmcid', 'score'), colClasses = c('character', 'integer'))
+tr <- read.transactions("tmp/single.tmp", format = "single", cols = c(1,2), sep = "\t")
 
-pmcid.set <- unique(c(dataset.1$pmcid, dataset.2$pmcid))
+rules <- apriori(tr, parameter=list(support = 0.0001, confidence = 0.95, minlen = 2, maxlen = 2, target = 'rules'), control = list(memopt = TRUE))
+subrules <- rules[quality(rules)$support >= 0.01]
 
-dataset.1.per.pmcid <- hash(keys = pmcid.set, values = c(0))
-dataset.2.per.pmcid <- hash(keys = pmcid.set, values = c(0))
+png("grouped.png", height=4000, width=6000, unit="px", pointsize=10, res = 150)
+plot(rules, method = 'grouped', control = list(k = 150))
+dev.off()
 
-for (row in 1:length(dataset.1$pmcid)) {
-	dataset.1.per.pmcid[[ dataset.1$pmcid[row] ]] <- dataset.1$score[row]
-}
+#png("matrix.png", height=800, width=1600, unit="px", pointsize=11)
+#plot(subrules, method="matrix", measure = c("lift", "confidence"), control = list(reorder = TRUE))
+#dev.off()
 
-for (row in 1:length(dataset.2$pmcid)) {
-	dataset.2.per.pmcid[[ dataset.2$pmcid[row] ]] <- dataset.2$score[row]
-}
+#png("graph_sets.png", height=6000, width=6000, unit="px", pointsize=10, res = 150)
+#plot(rules, method = 'graph')
+#dev.off()
 
-paired.values.1 <- as.vector(values(dataset.1.per.pmcid, keys = pmcid.set))
-paired.values.2 <- as.vector(values(dataset.2.per.pmcid, keys = pmcid.set))
-
-wilcox.test(x = paired.values.1, y = paired.values.2, paired = TRUE)
-
-cor(x = paired.values.1, y = paired.values.2)
-cor(x = paired.values.1, y = paired.values.2, method = 'spearman')
-
-pc <- princomp(data.frame(component.1 = paired.values.1, compoment.2 = paired.values.2), cor = TRUE)
-summary(pc)
-
-ks.test(x = paired.values.1, y = paired.values.2)
+#png("graph_items.png", height=6000, width=6000, unit="px", pointsize=10, res = 150)
+#plot(rules, method = 'graph', control = list(type = 'items'))
+#dev.off()
 
