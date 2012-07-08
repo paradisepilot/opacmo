@@ -1,0 +1,14 @@
+{
+    "aggregate": {
+        "pmcid": [
+            [ "entrezname", "entrezid", "entrezscore" ]
+        ]
+    },
+    "clauses": {
+        "entrezid": ["_GENEID_"]
+    },
+    "options": {
+        "distinct": true,
+        "offset": 0
+    }
+}

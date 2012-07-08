@@ -1,0 +1,35 @@
+.spinner {
+	position: absolute;
+	opacity: 0.9;
+	filter: alpha(opacity=90);
+	-ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=90);
+	z-index: 999;
+	background: #fff;
+}
+.spinner-msg {
+	text-align: center;
+	font-weight: bold;
+}
+
+.spinner-img {
+	background: url(images/spinner/ajax-loader.gif) no-repeat;
+	width: 66px;
+	height: 66px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 30px;
+}
+
+.relativespinner-msg {
+	text-align: center;
+	font-weight: bold;
+}
+
+.relativespinner-img {
+	background: url(images/spinner/springer-loader.gif) no-repeat;
+	width: 220px;
+	height: 19px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 15px;
+}

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>opacmo</title>
+		<link rel="stylesheet" href="http://twitter.github.com/bootstrap/1.3.0/bootstrap.min.css" />
+		<link rel="stylesheet" href="opacmo.css" type="text/css" />
+		<link rel="stylesheet" href="spinner.css" type="text/css" />
+		<script type="text/javascript" src="mootools-core-1.4.1.js"></script>
+		<script type="text/javascript" src="mootools-more-1.4.0.1.js"></script>
+		<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+		<script type="text/javascript">
+			google.load('visualization', '1.0', {'packages':['corechart']});
+		</script>
+		<script type="text/javascript" src="mortar.js"></script>
+	</head>
+	<body>
+		<div class="topbar">
+			<div class="fill">
+			<div class="container">
+			<span class="brand">opacmo</span>
+			<ul>
+			<li id="topbar_home" class="active"><a onclick="topbar_hide_modals(); topbar_activate('topbar_home'); $('juice').set('class', 'content')">Home</a></li>
+			<li id="topbar_about"><a onclick="topbar_hide_modals(); topbar_activate('topbar_about'); $('about').set('class', 'content')">About</a></li>
+			<li id="topbar_release"><a onclick="topbar_hide_modals(); topbar_activate('topbar_release'); $('release').set('class', 'content')">Release Notes</a></li>
+			<li id="topbar_galaxy"><a onclick="topbar_hide_modals(); topbar_activate('topbar_galaxy'); $('galaxy').set('class', 'content')">Galaxy</a></li>
+			<li id="topbar_acknowledgements"><a onclick="topbar_hide_modals(); topbar_activate('topbar_acknowledgements'); $('acknowledgements').set('class', 'content')">Acknowledgements</a></li>
+			</ul>
+			</div>
+			</div>
+		</div>
+		<div class="background"></div>
+		<div class="container-fluid">
+		<div class="sidebar">
+			<div id="logo"><img src="images/opacmo120inv.png" alt="opacmo logo" /></div>
+			<div id="options">
+				<ul class="inputs-list">
+					<li>
+						<label>
+							<input type="checkbox" id="optionSpringer" name="optionSpringer" value="optionSpringer" checked />
+							<span id="optionSpringerLabel">Springer Metadata API</span>
+						</label>
+					</li>
+					<li>
+						<label>
+							<input type="checkbox" id="optionHelpMessages" name="optionHelpMessages" value="optionHelpMessages" checked />
+							<span>Help messages</span>
+						</label>
+					</li>
+					<li>
+						<label>
+							<input type="checkbox" id="optionCaseSensitive" name="optionCaseSensitive" value="optionCaseSensitive" />
+							<span>Case-sensitive search</span>
+						</label>
+					</li>
+				</ul>
+			</div>
+			<div id="news">
+				<ul class="inputs-list">
+					<li>
+						<label>
+							<span class="date">5/30/12</span> Release 3: updated to open access subset of PubMed Central from 5/24/12 and extended the web-interface for the Springer API Challenge 2.0
+						</label>
+					</li>
+					<li>
+						<label>
+							<span class="date">12/31/11</span> Release 2: added ontology of Chemical Entities of Biological Interest and updated to open access subset of PubMed Central from 11/22/11
+						</label>
+					</li>
+					<li>
+						<label>
+							<span class="date">9/21/11</span> Release 1: complete processing over the open access subset of PubMed Central from 8/15/11
+						</label>
+					</li>
+					<li>
+						<label>
+							<span class="date">7/25/11</span> Release 0: named entity recognition of Entrez Genes, Gene Ontology terms and Disease Ontology terms over BioMed Central journals released
+						</label>
+					</li>
+				</ul>
+			</div>
+			<div id="adv_yoctogi">
+				Powered&nbsp;by&nbsp;<a style="text-decoration: none;" href="http://www.yoctogi.org/" target="_blank"><img src="images/Yoctogi80.png"></img></a>
+			</div>
+		</div>
+		<div id="juice" class="content">
+			<div id="notifications"></div>
+			<div id="help0" class="helpbar"><div class="helpitem"><img src="images/cyan/lightbulb_15x24.png"></img></div><div class="helpitem">Find publications linked to diseases, cellular components, biological processes molecular functions, chemical entities of biological interest, genes and species. Start off with entering some term that you like to search for in the text field below, such as metabolite, pneumonia, lactase activity, BRCA2. The search starts seamlessly when you enter two or more letters. For example, try entering 'meta'.</div></div>
+			<div class="toprow">
+				<div id="firststage" class="stage"></div>
+				<div class="stageaction">
+					<form action="" autocomplete="off" onsubmit="return false;">
+						<div id="querycontainer">
+							<input type="search" id="query" name="query" maxlength="60" alt="gene, species, ontology term" />
+						</div>
+					</form>
+				</div>
+			</div>
+			<div id="help1" class="helpbar"><div class="helpitem"><img src="images/cyan/lightbulb_15x24.png"></img></div><div class="helpitem">Below you see terms that start with the text you entered. Click on one or more terms that you are interested in. If you entered 'meta' as suggested beforehand, you see that it matches the ChEBI term 'metabolite' as well as some other terms. Click on the ChEBI term 'metabolite'.</div></div>
+			<div class="spinner"><div id="suggestionspinner"></div></div>
+			<div class="row">
+				<div id="secondstage" class="stage"></div>
+				<div class="stagesuggestions">
+					<div id="suggestioncontainer"></div>
+				</div>
+			</div>
+			<div class="row">
+				<div id="springerstage" class="stage">
+					<div id="springerribbon">Springer API</div>
+					<div id="helpSpringer" class="helpbar"><div class="helpitem"><img src="images/cyan/lightbulb_15x24.png"></img></div><div class="helpitem">A comparison between results returned by the Springer Metadata API and the results returned by opacmo is given here. If you chose the example term 'metabolite', then you will see that some of the documents in the top-25 results of opacmo/Springer actually coincide.</div></div>
+					<div class="relativespinner"><div id="springerspinner"></div></div>
+
+					<div id="resultspringer"></div>
+				</div>
+			</div>
+			<div id="help2" class="helpbar"><div class="helpitem"><img src="images/cyan/lightbulb_15x24.png"></img></div><div class="helpitem">Now you are presented with a list of publications and their linked terms that fit the selection above. <b>Enter another term in the text field to further narrow down your search.</b> The terms that you select on top of the current selection will be added to this query conjunctively. You can remove terms from the search by clicking the close button on top of the category in the previous step.</div></div>
+			<div class="spinner"><div id="resultspinner"></div></div>
+			<div class="row">
+				<div id="thirdstage" class="stage"></div>
+				<div class="stageresults">
+					<div id="resultdownloads"></div>
+					<div id="resultbrowse"></div>
+					<div id="resultcontainer"></div>
+				</div>
+			</div>
+		</div>
+		<div id="downloaddialog" class="modal hide">
+			<div class="modal-header">
+				<div class="close" onclick="$('downloaddialog').set('class', 'modal hide')">&times;</div>
+				<h3>Download Link</h3>
+			</div>
+			<div class="modal-body">
+				Your <span id='downloadtype'></span> file: <span id='downloadlink'></span>
+			</div>
+		</div>
+		<div id="about" class="modal hide">
+			<div class="row">
+				<p>
+					opacmo is the Open Access Mortar &mdash; a mash-up of biological and
+					biomedical terms linked to publications of the open-access subset of
+					PubMed Central.
+				</p>
+				<p>
+					opacmo is currently in its bootstrap phase. You can read more about
+					the initial goals in <a style="text-decoration: underline;" href="http://joachimbaran.wordpress.com/2011/07/25/opacmo-new/" target="_blank">this blog post</a> and get insights into
+					technological improvements that came with opacmo's release 2 in
+					<a style="text-decoration: underline;" href="http://joachimbaran.wordpress.com/2012/01/04/opacmo-release-2-of-the-open-access-mortar/" target="_blank">this follow-up post</a>.
+				</p>
+				<p>
+					<div class="signatures">
+						Joachim Baran<br />
+						joejimbo /at/ opacmo /dot/ org
+					</div>
+				</p>
+			</div>
+		</div>
+		<div id="acknowledgements" class="modal hide">
+			<div class="row">
+				<p>
+					Contributors in alphabetical order:
+					<ul>
+						<li>Kenneth Chu. <i>Beta Testing.</i></li>
+						<li>Miyuki Fukuma. <i>Web-Design Consulting & CSS Coding.</i></li>
+					</ul>
+				</p>
+			</div>
+		</div>
+		<div id="galaxy" class="modal hide">
+			<div class="row">
+				<p>
+					opacmo can easily be added to Galaxy (<a href="http://usegalaxy.org">http://usegalaxy.org</a>) using the following set-up.
+				</p>
+				<p>
+					If you have not installed Galaxy already, you can do so by:
+<pre>
+hg clone https://bitbucket.org/galaxy/galaxy-dist
+cd galaxy-dist
+./run.sh
+</pre>
+					You should have a local Galaxy installation available under 'http://localhost:8080' now. To proceed, stop the server by finding the line 'Starting server in PID <i>[...]</i>.' and running 'kill <i>[...]</i>.
+				</p>
+				<p>
+					Copy and paste the following tool configuration into the file 'tools/data_source/opacmo.xml':
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#004a43; '>&lt;?</span><span style='color:#200080; font-weight:bold; '>xml</span><span style='color:#004a43; '> </span><span style='color:#074726; '>version</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#7d0045; '>1.0</span><span style='color:#1060b6; '>"</span><span style='color:#004a43; '>?></span>
+<span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>tool</span> <span style='color:#474796; '>name</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>opacmo</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>id</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>opacmo</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>tool_type</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>data_source</span><span style='color:#1060b6; '>"</span><span style='color:#0057a6; '>></span>
+    <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>description</span><span style='color:#0057a6; '>></span>The Open Access Mortar<span style='color:#0057a6; '>&lt;/</span><span style='color:#333385; '>description</span><span style='color:#0057a6; '>></span>
+    <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>command</span> <span style='color:#474796; '>interpreter</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>python</span><span style='color:#1060b6; '>"</span><span style='color:#0057a6; '>></span>data_source.py $output $__app__.config.output_size_limit<span style='color:#0057a6; '>&lt;/</span><span style='color:#333385; '>command</span><span style='color:#0057a6; '>></span>
+    <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>inputs</span> <span style='color:#474796; '>action</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>http://www.opacmo.org/yoctogi.fcgi</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>check_values</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>false</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>target</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>_top</span><span style='color:#1060b6; '>"</span><span style='color:#0057a6; '>></span> 
+        <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>display</span><span style='color:#0057a6; '>></span>go to opacmo server $GALAXY_URL<span style='color:#0057a6; '>&lt;/</span><span style='color:#333385; '>display</span><span style='color:#0057a6; '>></span>
+        <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>param</span> <span style='color:#474796; '>name</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>GALAXY_URL</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>type</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>baseurl</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>value</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>/</span><span style='color:#1060b6; '>"</span> <span style='color:#0057a6; '>/></span>
+    <span style='color:#0057a6; '>&lt;/</span><span style='color:#333385; '>inputs</span><span style='color:#0057a6; '>></span>
+    <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>request_param_translation</span><span style='color:#0057a6; '>></span>
+        <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>request_param</span> <span style='color:#474796; '>galaxy_name</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>URL_method</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>remote_name</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>URL_method</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>missing</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>post</span><span style='color:#1060b6; '>"</span> <span style='color:#0057a6; '>/></span>
+        <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>request_param</span> <span style='color:#474796; '>galaxy_name</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>data_type</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>remote_name</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>data_type</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>missing</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>auto</span><span style='color:#1060b6; '>"</span> <span style='color:#0057a6; '>/></span>
+    <span style='color:#0057a6; '>&lt;/</span><span style='color:#333385; '>request_param_translation</span><span style='color:#0057a6; '>></span>
+    <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>uihints</span> <span style='color:#474796; '>minwidth</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>1024</span><span style='color:#1060b6; '>"</span><span style='color:#0057a6; '>/></span>
+    <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>outputs</span><span style='color:#0057a6; '>></span>
+        <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>data</span> <span style='color:#474796; '>name</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>output</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>format</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>tsv</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>label</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>${tool.name} on $getVar( 'q', 'unknown position' )</span><span style='color:#1060b6; '>"</span><span style='color:#0057a6; '>/></span>
+    <span style='color:#0057a6; '>&lt;/</span><span style='color:#333385; '>outputs</span><span style='color:#0057a6; '>></span>
+    <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>options</span> <span style='color:#474796; '>sanitize</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>False</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>refresh</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>True</span><span style='color:#1060b6; '>"</span><span style='color:#0057a6; '>/></span>
+<span style='color:#0057a6; '>&lt;/</span><span style='color:#333385; '>tool</span><span style='color:#0057a6; '>></span>
+</pre>
+				</p>
+				<p>
+					Now, add the tool to your 'tool_conf.xml' by adding 'opacmo.xml' to the 'Get Data' section. For example:
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#004a43; '>&lt;?</span><span style='color:#200080; font-weight:bold; '>xml</span><span style='color:#004a43; '> </span><span style='color:#074726; '>version</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#7d0045; '>1.0</span><span style='color:#1060b6; '>"</span><span style='color:#004a43; '>?></span>
+<span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>toolbox</span><span style='color:#0057a6; '>></span>
+  <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>section</span> <span style='color:#474796; '>name</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>Get Data</span><span style='color:#1060b6; '>"</span> <span style='color:#474796; '>id</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>getext</span><span style='color:#1060b6; '>"</span><span style='color:#0057a6; '>></span>
+    <span style='font-weight: bold; color:#0057a6; '>&lt;</span><span style='color:#333385; '>tool</span> <span style='color:#474796; '>file</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>data_source/opacmo.xml</span><span style='color:#1060b6; '>"</span><span style='color:#0057a6; '>/></span>
+    <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>tool</span> <span style='color:#474796; '>file</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>data_source/upload.xml</span><span style='color:#1060b6; '>"</span><span style='color:#0057a6; '>/></span>
+    <span style='color:#0057a6; '>&lt;</span><span style='color:#333385; '>tool</span> <span style='color:#474796; '>file</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"</span><span style='color:#1060b6; '>data_source/ucsc_tablebrowser.xml</span><span style='color:#1060b6; '>"</span> <span style='color:#0057a6; '>/></span>
+</pre>
+				</p>
+				<p>
+					Finally start the Galaxy server again by running './run.sh'.
+				</p>
+				<p>
+					<i>Note: If you run Galaxy on a cluster, you should edit 'universe_wsgi.ini' and add the line 'opacmo = local:///' under the '[galaxy:tool_runners]' section.</i>
+				</p>
+			</div>
+		</div>
+		<div id="release" class="modal hide">
+			<div class="row">
+				<h4>Release 3</h4>
+				<div class="releasenote">
+					<p>
+						Added journal titles, years, and DOIs. Springer API Challenge 2.0 participation.
+					</p>
+					<p>
+						<table>
+						<tr><td>Publications</td><td class="tablenumber">319015</td></tr>
+						<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&bull; with Entrez Genes</td><td class="tablenumber">62195</td></tr>
+						<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&bull; with species of NCBI's taxnomony</td><td class="tablenumber">30732</td></tr>
+						<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&bull; with ontological terms</td><td class="tablenumber">316747</td></tr>
+						<tr><td>Entrez Genes</td><td class="tablenumber">322990</td></tr>
+						<tr><td>Species</td><td class="tablenumber">22233</td></tr>
+						<tr><td>Ontology Terms</td><td class="tablenumber">19524</td></tr>
+						<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&bull; Gene Ontology</td><td class="tablenumber">8149</td></tr>
+						<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&bull; Disease Ontology</td><td class="tablenumber">3431</td></tr>
+						<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&bull; Chemical Entities of Biological Interest</td><td class="tablenumber">7944</td></tr>
+						</table>
+					</p>
+					<p>
+						Downloads: <a style="text-decoration: underline;" href="http://www.opacmo.org/releases/3/logfiles_release_3.tar.gz">logfiles_release_3.tar.gz</a> <a style="text-decoration: underline;" href="http://www.opacmo.org/releases/3/opacmo_release_3.tar.gz">opacmo_release_3.tar.gz</a>
+					</p>
+				</div>
+				<h4>Release 2</h4>
+				<div class="releasenote">
+					<p>
+						Added <a style="text-decoration: underline;" href="http://www.ebi.ac.uk/chebi/">Chemical Entities of Biological Interest</a> (ChEBI).
+					</p>
+					<p>
+						<table>
+						<tr><td>Publications</td><td class="tablenumber">255066</td></tr>
+						<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&bull; with Entrez Genes</td><td class="tablenumber">52030</td></tr>
+						<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&bull; with species of NCBI's taxnomony</td><td class="tablenumber">24758</td></tr>
+						<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&bull; with ontological terms</td><td class="tablenumber">253224</td></tr>
+						<tr><td>Entrez Genes</td><td class="tablenumber">264336</td></tr>
+						<tr><td>Species</td><td class="tablenumber">18332</td></tr>
+						<tr><td>Ontology Terms</td><td class="tablenumber">18173</td></tr>
+						<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&bull; Gene Ontology</td><td class="tablenumber">7599</td></tr>
+						<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&bull; Disease Ontology</td><td class="tablenumber">3330</td></tr>
+						<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&bull; Chemical Entities of Biological Interest</td><td class="tablenumber">7244</td></tr>
+						</table>
+					</p>
+					<p>
+						Downloads: <a style="text-decoration: underline;" href="http://www.opacmo.org/releases/2/logfiles_release_2.tar.gz">logfiles_release_2.tar.gz</a> <a style="text-decoration: underline;" href="http://www.opacmo.org/releases/2/opacmo_release_2.tar.gz">opacmo_release_2.tar.gz</a>
+					</p>
+				</div>
+				<h4>Release 1</h4>
+				<div class="releasenote">
+					<p>
+						First coverage of the complete open access subset of PubMed Central.
+					</p>
+					<p>
+						<table>
+						<tr><td>Publications</td><td class="tablenumber">144759</td></tr>
+						<tr><td>Entrez Genes</td><td class="tablenumber">200050</td></tr>
+						<tr><td>Species</td><td class="tablenumber">11032</td></tr>
+						<tr><td>Ontology Terms</td><td class="tablenumber">9559</td></tr>
+						<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&bull; Gene Ontology</td><td class="tablenumber">6495</td></tr>
+						<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&bull; Disease Ontology</td><td class="tablenumber">3064</td></tr>
+						</table>
+					</p>
+					<p>
+						Downloads: <a style="text-decoration: underline;" href="http://www.opacmo.org/releases/1/logfiles_release_1.tar.gz">logfiles_release_1.tar.gz</a> <a style="text-decoration: underline;" href="http://www.opacmo.org/releases/1/opacmo_release_1.tar.gz">opacmo_release_1.tar.gz</a>
+					</p>
+				</div>
+				<h4>Release 0</h4>
+				<div class="releasenote">
+					<p>
+						Proof-of-concept release. Presented in <a style="text-decoration: underline;" href="http://joachimbaran.wordpress.com/2011/07/25/opacmo-new/" target="_blank">opacmo: Introducting the Open Access Mortar</a>.
+					</p>
+					<p>
+						<table>
+						<tr><td>Publications</td><td class="tablenumber">30770</td></tr>
+						<tr><td>Entrez Genes</td><td class="tablenumber">107969</td></tr>
+						<tr><td>Species</td><td class="tablenumber">4614</td></tr>
+						<tr><td>Ontology Terms</td><td class="tablenumber">5594</td></tr>
+						<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&bull; Gene Ontology</td><td class="tablenumber">3913</td></tr>
+						<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&bull; Disease Ontology</td><td class="tablenumber">1681</td></tr>
+						</table>
+						</p>
+						<p>
+						No downloads available.
+					</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

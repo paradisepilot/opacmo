@@ -1,0 +1,1 @@
+db=pmc&term=("_GENENAME_"[Body+-+All+Words]+OR+_SYNONYMS_)+AND+("_SPECIESNAME_"[MeSH Terms]+OR+_SPECIESNAME_[Organism:noexp]+OR+_SPECIESNAME_[Organism Unsynonymized])i+1900:_MAXDATE_[pmcdat]&retmax=100000
