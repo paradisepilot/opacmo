@@ -1,0 +1,64 @@
+#!/bin/bash
+
+set -e -x
+
+EC2_USER_HOME=/home/ec2-user
+opacmo_log_dir=${EC2_USER_HOME}/opacmo_log
+LAUNCH_SCRIPT_LOG=${opacmo_log_dir}/log.opacmo-downloader-launch-script
+
+echo `date` > ${EC2_USER_HOME}/stdout.date
+echo `date` > ${LAUNCH_SCRIPT_LOG}
+
+echo "trying to cd to /home/ec2-user/" >> ${LAUNCH_SCRIPT_LOG}
+cd /home/ec2-user
+echo "finished cd-ing to /home/ec2-user/" >> ${LAUNCH_SCRIPT_LOG}
+
+echo "starting to run mkdir opacmo_log_dir" >> ${LAUNCH_SCRIPT_LOG}
+mkdir ${opacmo_log_dir}
+echo "finished running mkdir opacmo_log_dir" >> ${LAUNCH_SCRIPT_LOG}
+
+echo "starting update ..." >> ${LAUNCH_SCRIPT_LOG}
+yum update  -y
+echo "finished update" >> ${LAUNCH_SCRIPT_LOG}
+
+echo "starting to intall git ..." >> ${LAUNCH_SCRIPT_LOG}
+yum install -y git
+echo "finished installing git" >> ${LAUNCH_SCRIPT_LOG}
+
+echo "starting to install development tools" >> ${LAUNCH_SCRIPT_LOG}
+yum -y groupinstall 'Development Tools'
+echo "finished installing development tools" >> ${LAUNCH_SCRIPT_LOG}
+
+echo "starting to install readline-devel" >> ${LAUNCH_SCRIPT_LOG}
+yum -y install readline-devel
+echo "finished installing development tools" >> ${LAUNCH_SCRIPT_LOG}
+
+echo "starting to install ruby 1.9.2" >> ${LAUNCH_SCRIPT_LOG}
+wget ftp://ftp.ruby-lang.org//pub/ruby/1.9/ruby-1.9.2-p290.tar.gz
+     echo "finished running wget" >> ${LAUNCH_SCRIPT_LOG}
+tar xzf ruby-1.9.2-p290.tar.gz
+     echo "finished running tar" >> ${LAUNCH_SCRIPT_LOG}
+cd ruby-1.9.2-p290
+     echo "finished running cd" >> ${LAUNCH_SCRIPT_LOG}
+./configure > ${opacmo_log_dir}/stdout.configure 2> ${opacmo_log_dir}/stderr.configure
+     echo "finished running configure" >> ${LAUNCH_SCRIPT_LOG}
+make > ${opacmo_log_dir}/stdout.make 2> ${opacmo_log_dir}/stderr.make
+     echo "finished running make" >> ${LAUNCH_SCRIPT_LOG}
+make install > ${opacmo_log_dir}/stdout.make-install 2> ${opacmo_log_dir}/stderr.make-install
+     echo "finished running make install" >> ${LAUNCH_SCRIPT_LOG}
+cd ..
+     echo "finished installing cd .." >> ${LAUNCH_SCRIPT_LOG}
+echo "finished installing ruby 1.9.2" >> ${LAUNCH_SCRIPT_LOG}
+
+echo "starting to clone opacmo ..." >> ${LAUNCH_SCRIPT_LOG}
+git clone git://github.com/joejimbo/opacmo.git
+echo "finished cloning opacmo" >> ${LAUNCH_SCRIPT_LOG}
+
+echo "starting to clone bioknack ..." >> ${LAUNCH_SCRIPT_LOG}
+git clone git://github.com/joejimbo/bioknack.git
+echo "finished cloning bioknack" >> ${LAUNCH_SCRIPT_LOG}
+
+echo "starting to export PATH" >> ${LAUNCH_SCRIPT_LOG}
+export PATH=$PATH:/usr/local/bin:`pwd`/bioknack:`pwd`/opacmo
+echo "finished running export PATH" >> ${LAUNCH_SCRIPT_LOG}
+
