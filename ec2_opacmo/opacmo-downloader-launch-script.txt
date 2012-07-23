@@ -3,19 +3,16 @@
 set -e -x
 
 EC2_USER_HOME=/home/ec2-user
+echo `date` > ${EC2_USER_HOME}/stdout.date
+
 opacmo_log_dir=${EC2_USER_HOME}/opacmo_log
 LAUNCH_SCRIPT_LOG=${opacmo_log_dir}/log.opacmo-downloader-launch-script
-
-echo `date` > ${EC2_USER_HOME}/stdout.date
+mkdir ${opacmo_log_dir}
 echo `date` > ${LAUNCH_SCRIPT_LOG}
 
 echo "trying to cd to /home/ec2-user/" >> ${LAUNCH_SCRIPT_LOG}
 cd /home/ec2-user
 echo "finished cd-ing to /home/ec2-user/" >> ${LAUNCH_SCRIPT_LOG}
-
-echo "starting to run mkdir opacmo_log_dir" >> ${LAUNCH_SCRIPT_LOG}
-mkdir ${opacmo_log_dir}
-echo "finished running mkdir opacmo_log_dir" >> ${LAUNCH_SCRIPT_LOG}
 
 echo "starting update ..." >> ${LAUNCH_SCRIPT_LOG}
 yum update  -y
