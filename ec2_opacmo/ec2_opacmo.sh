@@ -39,6 +39,6 @@ fi
 ec2-run-instances ${opacmo_downloader_ami} --instance-type ${opacmo_downloader_instance_type} --key ${opacmo_keypair} --group ${opacmo_security_group} --user-data-file ${opacmo_downloader_launch_script} > ${opacmo_log_dir}/log.ec2-run-instances.downloader 2> ${opacmo_log_dir}/log.ec2-run-instances.downloader
 
 echo
-echo "opacmo-ec2-conductor: execution complete"
+echo "ec2_opacmo: execution complete"
 echo
 
